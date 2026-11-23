@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo_T.png" alt="Tortillery+" width="220">
+<img src="docs/logo_fblanco.png" alt="Tortillery+" width="220">
 
 # Tortillery+
 
