@@ -79,6 +79,39 @@ docs/              imágenes del README
   [Mainsail](https://github.com/mainsail-crew/mainsail), Crowsnest, KAMP, Shake&Tune, Moonraker-Timelapse, Mobileraker y
   Armbian.
 
+## 📜 Licencia
+
+Este proyecto incluye componentes con las siguientes licencias:
+
+- GPL-2.0 or later (armbian-mkspi)
+- Apache-2.0 (KlipperLCD)
+
+Por compatibilidad, Tortillery+ en su conjunto está licenciado bajo [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html).
+
+### 💰 ¿Quieres apoyar mi trabajo?
+
+Si te gusta lo que hago y quieres ayudarme a seguir creciendo y creando contenido:
+
+<div align="center">
+<p align="center">
+  <a href="https://paypal.me/jfmpkiko">
+    <img src="https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="Paypal">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://coff.ee/tecxart">
+    <img src="Media/cafe1.png" alt="Ko-fi" height="40px">
+  </a>
+</p>
+
+<p align="center">
+  <img alt="GitHub watchers" src="https://img.shields.io/github/watchers/tecxion/tecxion?style=flat-square">
+  &nbsp;
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/tecxion?style=flat-square">
+  &nbsp;
+  <img alt="Visitas" src="https://visitcount.itsvg.in/api?id=tecxion&icon=0&color=4">
+</p>
+</div>
+
 <div align="center">
 <sub>Hecho en España 🇪🇸 para la comunidad de la Artillery X4</sub>
 </div>
