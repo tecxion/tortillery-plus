@@ -1,0 +1,9 @@
+# Tortillery+: copia de la config cada vez que cambia printer.cfg (SAVE_CONFIG, calibraciones, edición en Mainsail)
+[Unit]
+Description=Copia de seguridad de la config de Klipper al cambiar printer.cfg
+
+[Path]
+PathChanged=/home/mks/printer_data/config/printer.cfg
+
+[Install]
+WantedBy=multi-user.target

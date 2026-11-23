@@ -1,0 +1,25 @@
+# Repo público de Tortillery+: SOLO lo necesario para instalarla (lo que usa install.sh) y su documentación.
+# Todo lo demás (imágenes, .HMI/.tft, RELEASE, iconos, JeroMod, herramientas de la pantalla, notas internas...) se queda
+# en el PC; las imágenes y la pantalla van en Google Drive.
+/*
+!/.gitignore
+!/README.md
+!/docs/
+!/tortillery_plus/
+!/plr/
+
+# herramientas y notas de desarrollo (no las usa la impresora)
+/tortillery_plus/screen/
+/tortillery_plus/build_image.sh
+/tortillery_plus/build_release.py
+/tortillery_plus/MEJORAS.md
+/tortillery_plus/V2.md
+/tortillery_plus/COMPARACION_*.md
+test_*.py
+
+__pycache__/
+*.pyc
+*.HMI
+*.tft
+*.img
+*.pem

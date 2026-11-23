@@ -1,0 +1,15 @@
+[Unit]
+Description=Tortillery+ vigilancia de la impresion con camara e IA
+After=moonraker.service crowsnest.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mks
+Nice=10
+ExecStart=/usr/bin/python3 /usr/local/bin/tortillery-ai.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
