@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo_fblanco.png" alt="Tortillery+" width="220">
+<img src="assets/logo_fblanco.png" alt="Tortillery+" width="220">
 
 # Tortillery+
 
@@ -65,7 +65,7 @@ Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida 
 ```
 tortillery_plus/   configs de Klipper, instalador, scripts, IA, Telegram y servicios
 plr/               recuperación tras corte de luz y KlipperLCD (pantalla)
-docs/              imágenes del README
+assets/              imágenes del README
 ```
 
 ## 🙏 Agradecimientos

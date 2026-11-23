@@ -2,6 +2,7 @@
 # Todo lo demás (imágenes, .HMI/.tft, RELEASE, iconos, JeroMod, herramientas de la pantalla, notas internas...) se queda
 # en el PC; las imágenes y la pantalla van en Google Drive.
 /*
+!/assets/
 !/.gitignore
 !/README.md
 !/docs/
