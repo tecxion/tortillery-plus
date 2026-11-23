@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.png" alt="Tortillery+" width="220">
+<img src="docs/logo_T.png" alt="Tortillery+" width="220">
 
 # Tortillery+
 
@@ -22,16 +22,16 @@ editar archivos y conservando tu calibración en cada actualización.
 
 ## ✨ Qué trae
 
-| | |
-|---|---|
-| 🖥️ **Pantalla nueva** | WiFi desde la pantalla, explorador por carpetas con USB, tiempo restante real, errores en español y calibración guiada. |
-| 🎯 **Calibración guiada** | Input shaper con aceleración máxima, pressure advance, extrusor y torsión del eje X, todo desde la pantalla. |
-| ⚡ **Corte de luz** | Guarda el estado cada 5 s y al volver ofrece reanudar la impresión. |
-| 📷 **Cámara automática** | Cualquier webcam USB aparece en Mainsail sin configurar nada. |
-| 🤖 **Vigilancia con IA** | Detecta espagueti, piezas despegadas y atascos; pausa y te avisa con foto (Anthropic, OpenAI, Google, NVIDIA u Ollama). |
-| 💬 **Telegram** | Inicio, pausa con botones, fin con foto, vídeo del timelapse y aviso de mantenimiento. `/foto`, `/estado`, `/reanudar`. |
-| 🔄 **Actualizaciones** | Desde Mainsail con un clic (solo versiones estables, nunca imprimiendo) y USB firmado para pantalla y placa. |
-| 🛡️ **Más segura** | Apagado de calentadores en pausas largas, detección de termistor suelto, watchdog y copias automáticas de la config. |
+|                           |                                                                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 🖥️ **Pantalla nueva**     | WiFi desde la pantalla, explorador por carpetas con USB, tiempo restante real, errores en español y calibración guiada. |
+| 🎯 **Calibración guiada** | Input shaper con aceleración máxima, pressure advance, extrusor y torsión del eje X, todo desde la pantalla.            |
+| ⚡ **Corte de luz**       | Guarda el estado cada 5 s y al volver ofrece reanudar la impresión.                                                     |
+| 📷 **Cámara automática**  | Cualquier webcam USB aparece en Mainsail sin configurar nada.                                                           |
+| 🤖 **Vigilancia con IA**  | Detecta espagueti, piezas despegadas y atascos; pausa y te avisa con foto (Anthropic, OpenAI, Google, NVIDIA u Ollama). |
+| 💬 **Telegram**           | Inicio, pausa con botones, fin con foto, vídeo del timelapse y aviso de mantenimiento. `/foto`, `/estado`, `/reanudar`. |
+| 🔄 **Actualizaciones**    | Desde Mainsail con un clic (solo versiones estables, nunca imprimiendo) y USB firmado para pantalla y placa.            |
+| 🛡️ **Más segura**         | Apagado de calentadores en pausas largas, detección de termistor suelto, watchdog y copias automáticas de la config.    |
 
 Lista completa de cambios respecto a la Tortillery original: **[CAMBIOS.md](tortillery_plus/CAMBIOS.md)**.
 
@@ -46,9 +46,9 @@ La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y 
 1. **Graba la imagen** en la eMMC de la impresora con [balenaEtcher](https://etcher.balena.io/) y deja que verifique.
 2. **Enciende la impresora.** El primer arranque tarda unos minutos: graba la placa y la pantalla solo.
 3. **En la pantalla**: elige X4 Pro o X4 Plus y el idioma.
-4. **Bienvenida**: conecta el WiFi, nivela la cama y pulsa *Terminar*.
+4. **Bienvenida**: conecta el WiFi, nivela la cama y pulsa _Terminar_.
 
-Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida y en *Ajustes*).
+Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida y en _Ajustes_).
 
 > [!TIP]
 > ¿Ya tienes la Tortillery original? Puedes actualizar sin volver a grabar la eMMC: mira
@@ -56,7 +56,7 @@ Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida 
 
 ## 🔄 Actualizar
 
-- **Desde Mainsail**: *Máquina › Actualizar › `tortillery`*. Actualiza configs, macros y KlipperLCD a la última versión
+- **Desde Mainsail**: _Máquina › Actualizar › `tortillery`_. Actualiza configs, macros y KlipperLCD a la última versión
   publicada. Tu calibración (PID, Z-offset, mallas, input shaper) se conserva.
 - **Por USB** (pantalla y firmware de la placa): copia la carpeta `USB` de la descarga a un pendrive FAT32 y arranca con él.
 
