@@ -4,7 +4,7 @@
 # Every replaced file is backed up as <file>.orig (only the first time).
 set -e
 [ "$(id -u)" = 0 ] || { echo "Ejecuta con sudo"; exit 1; }
-VERSION="1.0"
+VERSION="1.0.1"
 REPO_URL="https://github.com/tecxion/tortillery-plus.git"   # repo público de Tortillery+ (update_manager)
 MODEL="${1^^}"
 [ "$MODEL" = PRO ] || [ "$MODEL" = PLUS ] || { echo "Uso: sudo bash install.sh PRO|PLUS"; exit 1; }
@@ -118,6 +118,7 @@ install -m 755 "$HERE/telegram_setup.sh" /usr/local/bin/tortillery-telegram
 # ...or editing config/telegram.cfg in Mainsail (tortillery-ai.service applies it)
 install -m 644 "$SYS/telegram.cfg" /usr/local/share/tortillery/telegram.cfg
 install -m 644 "$SYS/tortillery_release.pub" /usr/local/share/tortillery/tortillery_release.pub   # firma del USB
+install -m 644 "$SYS/tortillery_allowed_signers" /usr/local/share/tortillery/tortillery_allowed_signers   # firma de versiones (Mainsail)
 [ -f "$CFG/telegram.cfg" ] || install -m 644 -o mks -g mks "$SYS/telegram.cfg" "$CFG/telegram.cfg"
 [ -f "$CFG/tortillery_ai.cfg" ] || install -m 644 -o mks -g mks "$SYS/tortillery_ai.cfg" "$CFG/tortillery_ai.cfg"
 systemctl daemon-reload

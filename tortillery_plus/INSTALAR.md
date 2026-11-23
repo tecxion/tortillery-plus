@@ -149,23 +149,28 @@ Quien grabe esa imagen solo tiene que encender la impresora:
 ## Actualizar desde Mainsail (repo de GitHub)
 `install.sh` clona el repo público (`REPO_URL` al principio de `install.sh`) en `~/tortillery` y añade
 `[update_manager tortillery]` (canal `stable`: solo versiones etiquetadas). En Mainsail > Máquina > Actualizar aparece
-`tortillery`; al actualizar, `tortillery-update.path` ejecuta el `install.sh` nuevo con el modelo de la impresora (espera
-si está imprimiendo). Log: `/var/log/tortillery-update.log`. La pantalla (`.tft`) y la placa siguen yendo por USB.
+`tortillery`; al actualizar, `tortillery-update.path` lanza `tortillery-update.sh` (espera si está imprimiendo). Por
+seguridad no ejecuta nada de `~/tortillery` (es del usuario `mks`): root baja su propia copia a `/opt/tortillery/repo`,
+comprueba que la última etiqueta lleva **la firma de Tortillery+** (`git verify-tag` con
+`/usr/local/share/tortillery/tortillery_allowed_signers`) y solo entonces ejecuta su `install.sh` con el modelo de la
+impresora. Una versión sin firma válida no se instala y queda apuntado en `/var/log/tortillery-update.log`. La pantalla
+(`.tft`) y la placa siguen yendo por USB.
 
-**Publicar en GitHub** (una vez, en el PC, en la carpeta del proyecto): el `.gitignore` solo deja subir lo necesario
-para instalar: `tortillery_plus/` (sin `screen/`, herramientas, tests ni notas internas), `plr/`, `docs/` y `README.md`. Las
-imágenes, `.HMI`, `.tft`, `RELEASE`, `printer.cfg`, `wifi.cfg` y la clave de firma se quedan en el PC.
+**Publicar una versión** (solo el autor, en el PC, en la carpeta del proyecto). El `.gitignore` solo deja subir lo
+necesario para instalar: `tortillery_plus/` (sin `screen/`, herramientas, tests ni notas internas), `plr/`, `docs/` y
+`README.md`. Las imágenes, `.HMI`, `.tft`, `RELEASE`, `printer.cfg`, `wifi.cfg` y las claves se quedan en el PC.
+Las etiquetas se firman con `%USERPROFILE%\.tortillery\firma_git` (la misma clave que firma el USB, en formato SSH; ya
+configurado en este repo con `gpg.format ssh`, `user.signingkey` y `tag.gpgSign`):
 ```powershell
-git init -b main
 git add .
 git status
-git commit -m "Tortillery+ 1.0"
-git remote add origin https://github.com/tecxion/tortillery-plus.git
-git push -u origin main
-git tag v1.0.0
-git push origin v1.0.0
+git commit -m "Tortillery+ 1.1.0"
+git tag v1.1.0 -m "Tortillery+ 1.1.0"
+git push origin main v1.1.0
 ```
-Cada versión nueva: sube los cambios, sube `VERSION` en `install.sh` y crea otra etiqueta (`v1.1.0`...).
+Antes, sube `VERSION` en `install.sh`. Comprobar la firma: `git verify-tag v1.1.0` (con `gpg.ssh.allowedSignersFile`
+apuntando a `tortillery_plus/system/tortillery_allowed_signers`, ya configurado). **Sin las claves de
+`%USERPROFILE%\.tortillery` no podrás publicar versiones que las impresoras acepten: haz una copia.**
 
 ## Copias de seguridad de la config
 Cada vez que cambia `printer.cfg` (por ejemplo, tras `SAVE_CONFIG`) se guarda una copia de `config/` en

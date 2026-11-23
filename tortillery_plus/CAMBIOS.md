@@ -27,7 +27,8 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - Si el USB no lleva firma, se acepta y se apunta en el log.
   - La clave privada solo está en el PC (`%USERPROFILE%\.tortillery\firma_privada.pem`).
 - **Actualizar Tortillery+ desde Mainsail** (`[update_manager tortillery]`): usa el repo público y solo versiones
-  etiquetadas. Al cambiar de versión, `tortillery-update.path` aplica `install.sh` con el modelo de la impresora. Nunca
+  etiquetadas **y firmadas** (`git verify-tag`). Al cambiar de versión, `tortillery-update.path` instala la versión
+  firmada desde una copia propia de root, nunca desde la carpeta de `mks`, con el modelo de la impresora. Nunca
   mientras imprime.
 - Klipper, Moonraker y Mainsail, desde Mainsail, en canal `stable` (la imagen traía `dev`).
 - Kernel y arranque de la placa retenidos (`apt-mark hold`): una actualización de Armbian podía dejarla sin arrancar.
