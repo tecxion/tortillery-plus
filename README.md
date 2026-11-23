@@ -99,16 +99,15 @@ Si te gusta lo que hago y quieres ayudarme a seguir creciendo y creando contenid
   </a>
   &nbsp;&nbsp;
   <a href="https://coff.ee/tecxart">
-    <img src="Media/cafe1.png" alt="Ko-fi" height="40px">
+    <img src="https://github.com/tecxion/TecXion/blob/main/Media/cafe1.png" alt="Ko-fi" height="40px">
   </a>
 </p>
 
 <p align="center">
-  <img alt="GitHub watchers" src="https://img.shields.io/github/watchers/tecxion/tecxion?style=flat-square">
+  <img alt="GitHub watchers" src="https://img.shields.io/github/watchers/tecxion/tortillery-plus?style=flat-square">
   &nbsp;
   <img alt="GitHub stars" src="https://img.shields.io/github/stars/tecxion?style=flat-square">
   &nbsp;
-  <img alt="Visitas" src="https://visitcount.itsvg.in/api?id=tecxion&icon=0&color=4">
 </p>
 </div>
 
