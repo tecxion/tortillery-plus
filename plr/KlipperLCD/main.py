@@ -785,7 +785,8 @@ class KlipperLCD ():
         elif evt == self.lcd.evt.AutoBedMesh:
             self.lcd.write("page autohome")
             self.lcd.write('autohome.t1.txt="Bed Mesh Processing..."')
-            self.printer.AutoBedMesh()
+            for g in tp.auto_mesh_gcode(data, self.printer.ishomed()):   # data = puntos por lado (0: printer.cfg)
+                self.printer.sendGCode(g)
             self.printer.wait_for_gcode_command(gcode_code='Mesh Bed Leveling Complete')
             self.lcd.write("levelmenu_z.va1.val=1")
             self.lcd.write("page levelmenu")

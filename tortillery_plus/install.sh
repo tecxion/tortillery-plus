@@ -4,7 +4,7 @@
 # Every replaced file is backed up as <file>.orig (only the first time).
 set -e
 [ "$(id -u)" = 0 ] || { echo "Ejecuta con sudo"; exit 1; }
-VERSION="1.0.1"
+VERSION="1.1.0"
 REPO_URL="https://github.com/tecxion/tortillery-plus.git"   # repo público de Tortillery+ (update_manager)
 MODEL="${1^^}"
 [ "$MODEL" = PRO ] || [ "$MODEL" = PLUS ] || { echo "Uso: sudo bash install.sh PRO|PLUS"; exit 1; }
@@ -159,17 +159,29 @@ put "$HERE/utils/tortillery-update.sh" /usr/local/bin/tortillery-update.sh 755 r
 put "$SYS/tortillery-update.path" /etc/systemd/system/tortillery-update.path 644 root
 put "$SYS/tortillery-update.service" /etc/systemd/system/tortillery-update.service 644 root
 REPO_DIR=/home/mks/tortillery
+systemctl stop tortillery-update.path 2>/dev/null || true   # que tocar el repo aquí no lance una actualización
+G="sudo -u mks env GIT_TERMINAL_PROMPT=0 git -C $REPO_DIR"
 if [ ! -d "$REPO_DIR/.git" ] && sudo -u mks env GIT_TERMINAL_PROMPT=0 timeout 120 git clone -q "$REPO_URL" "$REPO_DIR" 2>/dev/null; then
-    TAG=$(sudo -u mks git -C "$REPO_DIR" describe --tags --abbrev=0 2>/dev/null || true)
-    [ -n "$TAG" ] && sudo -u mks git -C "$REPO_DIR" checkout -q "$TAG"   # empieza en la última versión estable
-    echo "  repo $REPO_URL en $REPO_DIR ${TAG:+($TAG)}"
+    echo "  repo $REPO_URL en $REPO_DIR"
+fi
+# Moonraker necesita la rama main siguiendo a origin (no una etiqueta suelta, "HEAD desacoplado"): main se pone en la
+# última versión estable y Mainsail ofrece las siguientes. Arregla también los repos de la 1.0.x.
+if [ -d "$REPO_DIR/.git" ] && ! $G symbolic-ref -q HEAD >/dev/null; then
+    $G checkout -q -B main origin/main
+fi
+if [ -d "$REPO_DIR/.git" ] && [ "$($G rev-parse HEAD)" = "$($G rev-parse origin/main)" ]; then
+    TAG=$($G describe --tags --abbrev=0 2>/dev/null || true)
+    [ -n "$TAG" ] && $G reset -q --hard "$TAG" && echo "  repo en $TAG (rama main)"
 fi
 if [ -d "$REPO_DIR/.git" ]; then
     if ! grep -q '^\[update_manager tortillery\]' "$CFG/moonraker.conf"; then
-        printf '\n[update_manager tortillery]\ntype: git_repo\nchannel: stable\npath: %s\norigin: %s\nprimary_branch: main\n' \
+        printf '\n[update_manager tortillery]\ntype: git_repo\nchannel: stable\npath: %s\norigin: %s\nprimary_branch: main\nis_system_service: False\n' \
             "$REPO_DIR" "$REPO_URL" >> "$CFG/moonraker.conf"
         echo "  [update_manager tortillery] anadido a moonraker.conf"
     fi
+    # no es un servicio que Moonraker deba reiniciar (lo aplica tortillery-update.path): sin el aviso de moonraker.asvc
+    sed -i '/^\[update_manager tortillery\]$/,/^\[/{/^is_system_service:/d}' "$CFG/moonraker.conf"
+    sed -i 's/^\[update_manager tortillery\]$/&\nis_system_service: False/' "$CFG/moonraker.conf"
     systemctl daemon-reload
     systemctl enable --now tortillery-update.path >/dev/null 2>&1 && echo "  tortillery-update.path activado"
 else

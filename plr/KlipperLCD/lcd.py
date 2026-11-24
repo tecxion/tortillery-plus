@@ -11,6 +11,7 @@ import lib_col_pic
 
 import atexit
 import serial
+import tortillery as tp
 
 FHONE = 0x5a
 FHTWO = 0xa5
@@ -695,8 +696,12 @@ class LCD:
             self.callback(self.evt.TELEGRAM_QR)
         elif 0x50 <= code <= 0x55:
             self.callback(self.evt.NEOPIXEL, ('color', code - 0x50))
-        elif code in (0x58, 0x5A):
-            self.callback(self.evt.NEOPIXEL, ('modo', 'extruder_temp' if code == 0x58 else 'bed_temp'))
+        elif code == 0x56:   # color a medida (página led_rgb, valores 0-100)
+            rgb = tuple(self.read_variable('led_rgb.%s.val' % c) for c in 'rgb')
+            if all(v is not None and 0 <= v <= 100 for v in rgb):
+                self.callback(self.evt.NEOPIXEL, ('rgb', rgb))
+        elif code in (0x58, 0x59, 0x5A):
+            self.callback(self.evt.NEOPIXEL, ('modo', {0x58: 'extruder_temp', 0x59: 'auto', 0x5A: 'bed_temp'}[code]))
         elif 0x60 <= code <= 0x64:
             self.callback(self.evt.FAN_PART, (0, 25, 50, 75, 100)[code - 0x60])
         elif code == 0x65:
@@ -1020,6 +1025,8 @@ class LCD:
 
         if data[0] == 0x01: # Auto_BedMesh
             self.callback(self.evt.AutoBedMesh,0)
+        elif 0x20 <= data[0] <= 0x23: # Auto_BedMesh eligiendo los puntos (Tortillery+: 5x5, 6x6, 7x7, 9x9)
+            self.callback(self.evt.AutoBedMesh, tp.MESH_POINTS[data[0] - 0x20])
         elif data[0] == 0x02: # bed_screw
             position_value = self.read_variable('levelmenu_scr.probe.val')
             if (position_value >= 0):

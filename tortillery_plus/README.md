@@ -92,6 +92,15 @@ Cancelar / Otra foto**; el **fin** con foto; el vídeo del **timelapse** si est�
 escribirle `/foto`, `/estado`, `/reanudar` y `/cancelar` (solo obedece a tu chat). Utilidades > Más... > QR de Telegram
 abre el bot en el móvil.
 
+## Malla de la cama y luz LED
+- **Malla automática** (Nivelar > Malla automática, o Utilidades > Mallas > Medir nueva): elige los puntos por lado.
+  5x5 es rápida, 6x6 la de siempre, 7x7 y 9x9 más precisas pero más lentas (9x9 son 81 puntos). Se guarda como
+  `default` y Klipper se reinicia. La malla adaptativa de `PRINT_START` sigue usando la de `printer.cfg`.
+- **Luz LED** (Utilidades > Luz LED): un color fijo, un color a medida (Rojo, Verde y Azul de 0 a 100 %), que siga a
+  la temperatura del hotend o de la cama, o Automática (la de serie: sigue la temperatura al calentar y luego blanco).
+  Se guarda en `tortillery_vars.cfg` y se mantiene al imprimir y al reiniciar. Desde Mainsail o el G-code:
+  `LUZ_LED MODO=1 R=1 G=0.4 B=0` (color, de 0 a 1), `MODO=2` hotend, `MODO=3` cama, `MODO=0` automática.
+
 ## Calibración guiada (pantalla: Nivelar > Calibración)
 - **Input shaper y aceleración**: mide X e Y con el acelerómetro del cabezal y enseña tipo, frecuencia y la aceleración
   máxima que recomienda; Guardar conserva el shaper (`SAVE_CONFIG`) y la aceleración. `M204` del laminador no la supera.

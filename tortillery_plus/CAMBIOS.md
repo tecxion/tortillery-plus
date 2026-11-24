@@ -102,6 +102,10 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
 - **Páginas nuevas**:
   - Elegir material al cargar o descargar.
   - Luz LED, ventilador de capa, mallas (cargar, guardar, borrar, medir) y mantenimiento.
+  - **Luz LED (1.1)**: 6 colores, color a medida (R, G, B) y modos que siguen al hotend o a la cama. La elección se
+    guarda (`LUZ_LED`, `tortillery_vars.cfg`) y se mantiene al imprimir y al reiniciar; antes cada impresión la volvía
+    a poner en blanco.
+  - **Malla automática (1.1)**: eliges 5x5, 6x6, 7x7 o 9x9 puntos antes de medir.
   - Calibración (input shaper, pressure advance, extrusor, torsión).
   - Vigilancia IA.
   - Utilidades en dos páginas.
@@ -122,6 +126,10 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - No paga fotos iguales.
   - `modelo_confirmar` (un segundo modelo confirma antes de pausar).
   - Avisa si la vigilancia deja de funcionar.
+  - **Cualquier cámara (1.1)**: al empezar cada impresión la IA busca la cama en la foto y solo mira esa zona,
+    ampliada. Compara cada foto con otra de hace unos minutos (pieza movida, espagueti que crece). Entiende el
+    razonamiento de los modelos que piensan (`<think>`). Cada foto queda en el log. `--test foto.jpg` prueba con
+    una foto y guarda en `ia_prueba.jpg` lo que ha visto la IA.
 - **Telegram**:
   - Se configura en `telegram.cfg` desde Mainsail.
   - Avisos de inicio, cancelación y error.

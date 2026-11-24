@@ -31,14 +31,30 @@ SNAPSHOT = 'http://127.0.0.1/webcam/?action=snapshot'
 
 PROMPT = (
     "You are monitoring a 3D printer (FDM) through a webcam snapshot taken during a print. "
+    "The camera can be anywhere (above, at the side, close or far) and the photo may also show the room, the "
+    "printer frame, cables, fans and the print head: first find the build plate and the part being printed, and "
+    "judge only them. "
     "Decide if the print has clearly FAILED in one of these ways: 'espagueti' (tangled loose filament, "
     "spaghetti), 'despegada' (part or first layer lifting, curling up, dragged by the nozzle or detached / "
     "knocked over on the bed), 'atasco' (nozzle moving but no filament coming out, or a blob of plastic stuck "
-    "to the nozzle). A thin, flat, partially printed first layer is normal. A normal print, a dark/blurry "
-    "image or an unclear view is NOT a failure. Answer ONLY with JSON: "
+    "to the nozzle). A thin, flat, partially printed first layer is normal. A normal print is NOT a failure. "
+    "Webcams near the bed are often close-up, partly blurry or overexposed by the printer light: still judge "
+    "what you can see (plastic dragged or piled around the nozzle, the part moved or lifted from the bed); only "
+    "an image where the print area cannot be seen at all is NOT a failure. Answer ONLY with JSON: "
     '{"fallo": true|false, "tipo": "espagueti|despegada|atasco|ninguno", "confianza": 0.0-1.0, '
     '"motivo": "short reason in Spanish (max 12 words)"}'
 )
+# con una foto anterior de la misma impresión: lo que cambia delata el fallo (vale para cualquier cámara)
+PAIR = (" You get TWO photos of the same print from the same camera: the FIRST one was taken about %d minutes "
+        "ago, the SECOND one is now. Judge the SECOND photo and use the first one to see what changed: a part that "
+        "moved, disappeared, tipped over or lifted, or a tangle of filament that appeared or grew, is a strong sign "
+        "of failure. The part simply getting taller, or the print head and bed being in another position, is "
+        "normal.")
+# al empezar cada impresión: dónde está la cama, para mandar solo esa zona ampliada (cualquier cámara)
+BED_PROMPT = ("Find the 3D printer's build plate (the flat bed the part is printed on) in this webcam photo. "
+              'Answer ONLY with JSON: {"cama": [left, top, right, bottom]} with its edges as percentages (0-100) '
+              'of the image width and height, or {"cama": null} if you cannot see it.')
+BED_MARGIN = 15   # % alrededor de la cama: en las X4 la cama se mueve adelante y atrás
 OPENAI_BASES = {'openai': 'https://api.openai.com/v1', 'nvidia': 'https://integrate.api.nvidia.com/v1'}
 # Claude: modelos que admiten el reintento en el servidor si la petición se rechaza (fallbacks)
 CLAUDE_FALLBACK = ('claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5', 'claude-fable-5-2', 'claude-fable-5-1')
@@ -78,17 +94,21 @@ def ready(s):
     return bool(s.get('api_key'))
 
 
-def ask(s, jpg, ctx=''):
-    """-> texto de la IA (None si la rechaza). ctx: minutos y capa, para que sepa en qué fase va."""
+def ask(s, jpg, ctx='', prev=None, prompt=None):
+    """-> texto de la IA (None si la rechaza). ctx: minutos y capa, para que sepa en qué fase va.
+    prev: (minutos, foto) anterior de la misma impresión para comparar. prompt: otro enunciado (buscar la cama)."""
     p, key, model = s['proveedor'], s.get('api_key', ''), s.get('modelo', '')
-    prompt = PROMPT + (' ' + ctx if ctx else '')
-    b64 = base64.b64encode(jpg).decode()
+    if prompt is None:
+        prompt = PROMPT + (PAIR % prev[0] if prev else '') + (' ' + ctx if ctx else '')
+        if s.get('camara'):   # lo que el usuario describe de su cámara (qué se ve, qué es parte de la impresora)
+            prompt += ' Notes about this camera from the owner: ' + s['camara']
+    imgs = [base64.b64encode(x).decode() for x in ([prev[1]] if prev else []) + [jpg]]   # la anterior, primero
     if p == 'anthropic':
         model = model or 'claude-opus-5-5'
         body = {'model': model, 'max_tokens': 2000, 'output_config': {'effort': 'low'},
                 'messages': [{'role': 'user', 'content': [
-                    {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': b64}},
-                    {'type': 'text', 'text': prompt}]}]}
+                    {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': b}}
+                    for b in imgs] + [{'type': 'text', 'text': prompt}]}]}
         h = {'x-api-key': key, 'anthropic-version': '2026-10-21'}
         if model in CLAUDE_FALLBACK:
             body['fallbacks'] = 'default'
@@ -99,14 +119,14 @@ def ask(s, jpg, ctx=''):
         return ''.join(b.get('text', '') for b in r.get('content', []) if b.get('type') == 'text')
     if p == 'google':
         model = model or 'gemini-2.5-flash'
-        body = {'contents': [{'parts': [{'text': prompt},
-                                        {'inline_data': {'mime_type': 'image/jpeg', 'data': b64}}]}]}
+        body = {'contents': [{'parts': [{'text': prompt}] +
+                              [{'inline_data': {'mime_type': 'image/jpeg', 'data': b}} for b in imgs]}]}
         r = json.loads(http('https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent'
                             % urllib.parse.quote(model), body, {'x-goog-api-key': key}))
         return ''.join(x.get('text', '') for x in r['candidates'][0]['content']['parts'])
     if p == 'ollama':
         body = {'model': model or 'qwen2.5vl', 'stream': False, 'format': 'json',
-                'messages': [{'role': 'user', 'content': prompt, 'images': [b64]}]}
+                'messages': [{'role': 'user', 'content': prompt, 'images': imgs}]}
         r = json.loads(http(s['url'].rstrip('/') + '/api/chat', body, timeout=300))
         return r['message']['content']
     # openai / nvidia / cualquier API compatible con OpenAI (LM Studio, etc.)
@@ -115,8 +135,8 @@ def ask(s, jpg, ctx=''):
         model = 'nvidia/' + model   # build.nvidia.com usa ids con dueño: nvidia/..., meta/..., qwen/...
     # 2000: los modelos que razonan (Nemotron super, o-series...) gastan tokens pensando antes de contestar
     body = {'model': model, 'max_tokens': 2000, 'messages': [{'role': 'user', 'content': [
-        {'type': 'text', 'text': prompt},
-        {'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + b64}}]}]}
+        {'type': 'text', 'text': prompt}] + [
+        {'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + b}} for b in imgs]}]}
     r = json.loads(http(base + '/chat/completions', body, {'Authorization': 'Bearer ' + key}))
     c = r['choices'][0]
     if not c['message'].get('content'):
@@ -124,14 +144,65 @@ def ask(s, jpg, ctx=''):
     return c['message']['content']
 
 
+SINGLE = set()   # (proveedor, modelo) que no aceptan dos fotos en una consulta
+
+
+def ask_print(s, jpg, ctx, prev):
+    """Consulta de vigilancia: con la foto anterior si el modelo la acepta; si la rechaza (400/413/422), con una."""
+    k = (s['proveedor'], s.get('modelo', ''))
+    if prev and k not in SINGLE:
+        try:
+            return ask(s, jpg, ctx, prev)
+        except urllib.error.HTTPError as e:
+            if e.code not in (400, 413, 422):
+                raise
+            SINGLE.add(k)
+            log('IA: %s no acepta dos fotos (%s): sigue con una' % (k[1] or k[0], e.code))
+    return ask(s, jpg, ctx)
+
+
+def bed_box(text):
+    """Respuesta a BED_PROMPT -> recorte 'izq,arriba,der,abajo' en % con margen; '' si no hay cama clara."""
+    text = re.sub(r'<think>.*?(</think>|$)', '', text or '', flags=re.S)
+    try:
+        v = json.loads(re.findall(r'\{[^{}]*"cama"[^{}]*\}', text)[-1])['cama']
+        l, t, r, b = (float(x) for x in v)
+    except (IndexError, ValueError, TypeError, KeyError):
+        return ''
+    if max(l, t, r, b) <= 1:   # algunos modelos contestan en fracciones (0-1)
+        l, t, r, b = l * 100, t * 100, r * 100, b * 100
+    if not (0 <= l < r <= 100 and 0 <= t < b <= 100) or r - l < 10 or b - t < 10:
+        return ''
+    l, t, r, b = max(0, l - BED_MARGIN), max(0, t - BED_MARGIN), min(100, r + BED_MARGIN), min(100, b + BED_MARGIN)
+    if (r - l) * (b - t) > 8500:   # la cama ya llena casi toda la foto: no merece recortar
+        return ''
+    return '%d,%d,%d,%d' % (l, t, r, b)
+
+
+def find_bed(s, jpg):
+    """recorte de tortillery_ai.cfg; vacío o 'auto': la IA busca la cama (una consulta por impresión); 'no': nada."""
+    r = s.get('recorte', '').strip().lower()
+    if r in ('no', 'off', '0'):
+        return ''
+    if r not in ('', 'auto'):
+        return r
+    box = bed_box(ask(s, jpg, prompt=BED_PROMPT))
+    log('IA: cama en la foto: %s' % (box or 'no encontrada, uso la foto entera'))
+    return box
+
+
 def verdict(text):
-    """Texto de la IA -> (fallo, confianza, tipo, motivo). Tolera texto alrededor del JSON."""
-    m = re.search(r'\{.*\}', text or '', re.S)
-    if not m:
+    """Texto de la IA -> (fallo, confianza, tipo, motivo). Tolera texto alrededor del JSON y el razonamiento
+    <think>...</think> de los modelos que piensan (Nemotron, Qwen, DeepSeek...): vale el último JSON con "fallo"."""
+    text = re.sub(r'<think>.*?(</think>|$)', '', text or '', flags=re.S)
+    found = re.findall(r'\{[^{}]*"fallo"[^{}]*\}', text)
+    if not found:
+        log('IA: respuesta sin JSON valido: %r' % text[:160])
         return False, 0.0, 'ninguno', ''
     try:
-        v = json.loads(m.group(0))
+        v = json.loads(found[-1])
     except ValueError:
+        log('IA: JSON no valido: %r' % found[-1][:160])
         return False, 0.0, 'ninguno', ''
     fallo = v.get('fallo') in (True, 'true', 'True', 1)
     try:
@@ -296,6 +367,24 @@ def status(estado, detalle=''):
         pass
 
 
+def crop(jpg, spec):
+    """recorte 'izq,arriba,der,abajo' en % de la foto -> solo esa zona (la cama), para que la IA la vea grande.
+    Sin recorte, con un valor mal escrito o sin Pillow: la foto entera."""
+    try:
+        l, t, r, b = (float(v) for v in spec.split(','))
+        assert 0 <= l < r <= 100 and 0 <= t < b <= 100
+        import io
+        from PIL import Image
+        im = Image.open(io.BytesIO(jpg))
+        w, h = im.size
+        out = io.BytesIO()
+        im.crop((int(w * l / 100), int(h * t / 100), int(w * r / 100), int(h * b / 100))).convert('RGB').save(
+            out, 'JPEG', quality=90)
+        return out.getvalue()
+    except Exception:
+        return jpg
+
+
 def thumb(jpg):
     """Foto -> miniatura gris 64x48 (bytes) para comparar; None sin Pillow o si la foto no se lee."""
     try:
@@ -380,6 +469,12 @@ def bot_loop():
                 except (urllib.error.URLError, OSError, KeyError, ValueError, TypeError) as e:
                     log('Telegram orden: %s' % e)
         except (urllib.error.URLError, OSError, KeyError, ValueError) as e:
+            if isinstance(e, urllib.error.HTTPError) and e.code == 409:
+                # 409: otro programa lee este mismo bot (otra impresora, un webhook de n8n...): los botones y las
+                # órdenes no llegan aquí; los avisos sí se envían
+                desc = e.read().decode('utf-8', 'replace')
+                e = '409, otro programa usa este bot (%s). Usa un bot propio para esta impresora' % (
+                    'tiene un webhook: getWebhookInfo' if 'webhook' in desc else 'otro getUpdates a la vez')
             log('Telegram escucha: %s' % e)
             time.sleep(30)
 
@@ -471,6 +566,8 @@ def events_loop():
 def main():
     strikes = fails = skipped = 0
     last = None   # miniatura de la última foto que miró la IA
+    box = None    # recorte de la cama en esta impresión (None: aún sin buscar)
+    hist = []     # (hora, foto recortada) de esta impresión, para comparar con una de hace unos minutos
     while True:
         try:
             telegram_sync()
@@ -490,7 +587,8 @@ def main():
         dur = st.get('print_duration', 0)
         if st.get('state') != 'printing' or dur < int(s.get('espera_inicio', 60)):
             strikes = fails = skipped = 0
-            last = None
+            last = box = None
+            hist = []
             status('esperando', 'vigila al imprimir')
             time.sleep(15)
             continue
@@ -511,13 +609,21 @@ def main():
                 time.sleep(interval)
                 continue
             skipped = 0
-            fallo, conf, tipo, motivo = verdict(ask(s, jpg, ctx + '.'))
+            if box is None:
+                box = find_bed(s, jpg)
+            seen = crop(jpg, box)   # lo que mira la IA (Telegram recibe la foto entera)
+            now = time.time()
+            old = [(now - h, j) for h, j in hist if now - h >= 180]   # la más reciente de hace 3 min o más
+            prev = (int(old[-1][0] // 60), old[-1][1]) if old else None
+            fallo, conf, tipo, motivo = verdict(ask_print(s, seen, ctx + '.', prev))
+            log('IA (%s): fallo=%s %s %.2f %s' % (ctx, fallo, tipo, conf, motivo))   # cada foto, para comprobarla
             if fallo and conf >= float(s.get('umbral', 0.7)) and s.get('modelo_confirmar'):
-                f2, c2, t2, m2 = verdict(ask(dict(s, modelo=s['modelo_confirmar']), jpg, ctx + '.'))
+                f2, c2, t2, m2 = verdict(ask_print(dict(s, modelo=s['modelo_confirmar']), seen, ctx + '.', prev))
                 if not (f2 and c2 >= float(s.get('umbral', 0.7))):
                     log('descartado por %s: %s' % (s['modelo_confirmar'], motivo))
                     fallo = False
             last = th
+            hist = [(h, j) for h, j in hist if now - h < 900] + [(now, seen)]   # 15 min como mucho
             fails = 0
             status('vigilando', ('posible %s' % tipo) if fallo else 'todo bien')
         except (urllib.error.URLError, OSError, KeyError, IndexError, ValueError) as e:
@@ -556,12 +662,23 @@ def main():
 
 
 if __name__ == '__main__':
-    if sys.argv[1:] == ['--test']:   # prueba manual: una foto ahora mismo, sin pausar nada
+    if sys.argv[1:2] == ['--test']:   # prueba manual sin pausar nada: la cámara ahora, o --test foto.jpg
         s = load_cfg()
         if not ready(s):
             sys.exit('Configura proveedor, modelo y api_key en ' + CFG)
         try:
-            text = ask(s, http(SNAPSHOT, timeout=15))
+            if len(sys.argv) > 2:
+                with open(sys.argv[2], 'rb') as f:
+                    jpg = f.read()
+            else:
+                jpg = http(SNAPSHOT, timeout=15)
+            print('Proveedor %s, modelo %s' % (s['proveedor'], s.get('modelo')))
+            box = find_bed(s, jpg)
+            print('Recorte de la cama: %s' % (box or 'ninguno (foto entera)'))
+            jpg = crop(jpg, box)
+            with open(PD + '/config/ia_prueba.jpg', 'wb') as f:   # Mainsail > Máquina: lo que ha visto la IA
+                f.write(jpg)
+            text = ask(s, jpg)
         except ValueError as e:   # HTTPError no es ValueError
             sys.exit('La IA no ha contestado: %s. Prueba otro modelo.' % e)
         except urllib.error.HTTPError as e:

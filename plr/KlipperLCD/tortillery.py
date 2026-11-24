@@ -162,16 +162,28 @@ def wifi_list():
 # ---- Luz LED (Neopixel) y mallas
 NEOPIXEL_LED = 'my_neopixel'
 NEOPIXEL_COLORS = [(1, 1, 1), (1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 0.55, 0), (0, 0, 0)]  # orden de la pantalla
+LED_MODES = {'auto': 0, 'extruder_temp': 2, 'bed_temp': 3}  # LUZ_LED MODO= (1 = color fijo)
 MESH_ROWS = 4
+MESH_POINTS = [5, 6, 7, 9]   # malla automática: puntos por lado (códigos 0x1060 20-23 de la pantalla)
 
 
 def neopixel_gcode(kind, value):
-    """('color', índice) -> color fijo (quita la plantilla que sigue la temperatura); ('modo', tipo) -> plantilla."""
+    """('color', índice) | ('rgb', (r, g, b) en %) -> color fijo; ('modo', 'auto'|'extruder_temp'|'bed_temp').
+    LUZ_LED (utilidades.cfg) lo guarda en tortillery_vars.cfg: se mantiene al imprimir y al reiniciar."""
     if kind == 'color':
         r, g, b = NEOPIXEL_COLORS[value]
-        return ('SET_LED_TEMPLATE LED=%s TEMPLATE=""\nSET_LED LED=%s RED=%s GREEN=%s BLUE=%s SYNC=0 TRANSMIT=1'
-                % (NEOPIXEL_LED, NEOPIXEL_LED, r, g, b))
-    return 'NEOPIXEL_DISPLAY LED="%s" TYPE=%s MODE=glow' % (NEOPIXEL_LED, value)
+    elif kind == 'rgb':
+        r, g, b = (round(max(0, min(100, v)) / 100, 2) for v in value)
+    else:
+        return 'LUZ_LED MODO=%d' % LED_MODES[value]
+    return 'LUZ_LED MODO=1 R=%s G=%s B=%s' % (r, g, b)
+
+
+def auto_mesh_gcode(points, homed):
+    """Malla automática como printer.AutoBedMesh, con points x points puntos (0 = los de printer.cfg)."""
+    count = ' PROBE_COUNT=%d,%d' % (points, points) if points else ''
+    return (['M140 S60', 'M104 S150'] + ([] if homed else ['G28']) +
+            ['M190 S60', 'M109 S150', 'BED_MESH_CALIBRATE PROFILE="default"' + count, 'SAVE_CONFIG'])
 
 
 def next_mesh_name(existing):

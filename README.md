@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-f1bf00)
 
-[Descargar](#-descarga) · [Instalar](#-instalación) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/INSTALAR.md)
+[Descargar](#-descarga) · [Instalar](#-instalación) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md)
 
 </div>
 
@@ -52,7 +52,7 @@ Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida 
 
 > [!TIP]
 > ¿Ya tienes la Tortillery original? Puedes actualizar sin volver a grabar la eMMC: mira
-> [INSTALAR.md](tortillery_plus/INSTALAR.md).
+> [la guía de instalación](tortillery_plus/README.md).
 
 ## 🔄 Actualizar
 
