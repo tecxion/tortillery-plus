@@ -30,7 +30,9 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   etiquetadas **y firmadas** (`git verify-tag`). Al cambiar de versión, `tortillery-update.path` instala la versión
   firmada desde una copia propia de root, nunca desde la carpeta de `mks`, con el modelo de la impresora. Nunca
   mientras imprime.
-- Klipper, Moonraker y Mainsail, desde Mainsail, en canal `stable` (la imagen traía `dev`).
+- Klipper, Moonraker y Mainsail, desde Mainsail, en canal `stable` (la imagen traía `dev`). La imagen 1.1.3 trae
+  Klipper 0.14.0, Moonraker 0.11.0 y Mainsail 2.19.0 (el firmware de la placa no hace falta cambiarlo).
+- Mainsail busca versiones nuevas de Tortillery+ cada día (antes cada 7 y solo de madrugada).
 - Kernel y arranque de la placa retenidos (`apt-mark hold`): una actualización de Armbian podía dejarla sin arrancar.
 - Desactivados `unattended-upgrades` y `apt-daily` (actualizaban en mitad de una impresión), `openvpn`, `rpcbind` y `vnstat`.
 

@@ -4,7 +4,7 @@
 # Every replaced file is backed up as <file>.orig (only the first time).
 set -e
 [ "$(id -u)" = 0 ] || { echo "Ejecuta con sudo"; exit 1; }
-VERSION="1.1.2"
+VERSION="1.1.3"
 REPO_URL="https://github.com/tecxion/tortillery-plus.git"   # repo público de Tortillery+ (update_manager)
 MODEL="${1^^}"
 [ "$MODEL" = PRO ] || [ "$MODEL" = PLUS ] || { echo "Uso: sudo bash install.sh PRO|PLUS"; exit 1; }
@@ -182,6 +182,9 @@ if [ -d "$REPO_DIR/.git" ]; then
     # no es un servicio que Moonraker deba reiniciar (lo aplica tortillery-update.path): sin el aviso de moonraker.asvc
     sed -i '/^\[update_manager tortillery\]$/,/^\[/{/^is_system_service:/d}' "$CFG/moonraker.conf"
     sed -i 's/^\[update_manager tortillery\]$/&\nis_system_service: False/' "$CFG/moonraker.conf"
+    # buscar versiones nuevas cada día (por defecto cada 7 y solo de 0 a 5 h): al arrancar Moonraker ya las ve
+    sed -i '/^\[update_manager tortillery\]$/,/^\[/{/^refresh_interval:/d}' "$CFG/moonraker.conf"
+    sed -i 's/^\[update_manager tortillery\]$/&\nrefresh_interval: 24/' "$CFG/moonraker.conf"
     systemctl daemon-reload
     systemctl enable --now tortillery-update.path >/dev/null 2>&1 && echo "  tortillery-update.path activado"
 else
