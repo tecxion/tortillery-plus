@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-f1bf00)
 
-[Descargar](#-descarga) · [Instalar](#-instalación) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md)
+[Descargar](#-descarga) · [Instalar](#-instalación) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md)
 
 </div>
 
@@ -35,13 +35,93 @@ editar archivos y conservando tu calibración en cada actualización.
 
 Lista completa de cambios respecto a la Tortillery original: **[CAMBIOS.md](tortillery_plus/CAMBIOS.md)**.
 
+## 📱 La pantalla
+
+<div align="center">
+<img src="assets/pantalla.png" alt="Pantallas de Tortillery+: menú principal, calibración, luz LED, malla automática, utilidades y color a medida" width="640">
+</div>
+
+<sub>Menú principal con la barra de estado, calibración guiada, luz LED, malla con 5x5 a 9x9 puntos, utilidades y color
+a medida.</sub>
+
+## 💬 Avisos en Telegram
+
+<table>
+<tr>
+<td width="55%">
+<img src="assets/telegram.png" alt="Avisos de Tortillery+ en Telegram: pausa con foto y botones, cancelación, inicio y fin con foto">
+</td>
+<td>
+
+La impresora te escribe por Telegram:
+
+- ▶️ **Inicio** y ⏹️ **cancelación**, también si cancelas desde la pantalla.
+- ⏸️ **Pausa con foto** y botones: _Reanudar_, _Cancelar_ y _Otra foto_.
+- ✅ **Fin con foto** y el tiempo que ha tardado.
+- 🤖 Si la IA ve un fallo, pausa y te manda la foto.
+- 🎬 Vídeo del timelapse y aviso de mantenimiento.
+
+Órdenes: `/foto`, `/estado`, `/reanudar`, `/cancelar`. Solo obedece a tu chat.
+
+Se configura en `telegram.cfg` desde Mainsail: [cómo hacerlo](tortillery_plus/README.md#telegram).
+
+</td>
+</tr>
+</table>
+
+## 🤖 Vigilancia con IA
+
+Cada minuto (o lo que elijas) la IA mira la foto de la cámara. Si ve un fallo, **pausa la impresión** y te avisa con la foto.
+
+- Al empezar cada impresión busca la cama en la foto y solo mira esa zona, ampliada: vale **cualquier posición de la
+  cámara**.
+- Compara cada foto con otra de hace unos minutos, así nota una pieza que se ha movido o un espagueti que crece.
+- Antes de pausar puede pedir confirmación a un segundo modelo.
+- Proveedores: Anthropic, OpenAI, Google, NVIDIA, Ollama (en tu PC, gratis) o cualquiera compatible con OpenAI.
+
+Ejemplo real con una foto de espagueti (`tortillery-ai.py --test foto.jpg`):
+
+```text
+Proveedor nvidia, modelo nvidia/nemotron-3.5-super-vl-120b-a12b
+{"fallo": true, "tipo": "espagueti", "confianza": 0.95,
+ "motivo": "Exceso de filamento enredado alrededor del objeto impreso."}
+```
+
+Con `--test` también se guarda en `ia_prueba.jpg` lo que ha visto la IA, para comprobar que tu cámara encuadra bien.
+Se configura en `tortillery_ai.cfg` desde Mainsail: [cómo hacerlo](tortillery_plus/README.md#detección-de-fallos-con-ia-opcional).
+
+## ⚖️ Tortillery y Tortillery+
+
+|                                          | Tortillery original | **Tortillery+**                 |
+| ---------------------------------------- | :-----------------: | :-----------------------------: |
+| Klipper, Moonraker y Mainsail en la eMMC |         ✅          |               ✅                |
+| Instalar sin SSH (asistente en pantalla) |          —          |               ✅                |
+| Claves SSH e identidad propias por impresora |      —          |               ✅                |
+| WiFi desde la pantalla                   |          —          |               ✅                |
+| Calibración guiada (input shaper, PA…)   |          —          |               ✅                |
+| Malla 5x5 a 9x9 y luz LED a medida       |          —          |               ✅                |
+| Vigilancia con IA y Telegram             |          —          |               ✅                |
+| Actualizar desde Mainsail (versiones firmadas) |       —       |               ✅                |
+| Apagado de calentadores en pausas largas |          —          |               ✅                |
+
 ## 📦 Descarga
 
 La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y están en Google Drive:
 
 > **[⬇️ Descargar Tortillery+ (Google Drive)](ENLACE_DE_GOOGLE_DRIVE)**
 
+## 🧰 Qué necesitas
+
+- Una **Artillery Sidewinder X4 Pro o X4 Plus**.
+- Un **lector de eMMC** (adaptador USB para el módulo eMMC de la placa) para grabar la imagen.
+- Un **pendrive FAT32**, solo para actualizar la pantalla y el firmware de la placa.
+- Opcional: una **webcam USB** (cualquiera UVC) para fotos, timelapse y la IA.
+- Opcional: una **clave de API** de IA (u Ollama en tu PC) y un **bot de Telegram** creado con
+  [@BotFather](https://t.me/BotFather).
+
 ## 🚀 Instalación
+
+<img src="assets/asistente.gif" alt="Asistente del primer arranque: modelo, idioma y bienvenida" width="200" align="right">
 
 1. **Graba la imagen** en la eMMC de la impresora con [balenaEtcher](https://etcher.balena.io/) y deja que verifique.
 2. **Enciende la impresora.** El primer arranque tarda unos minutos: graba la placa y la pantalla solo.
@@ -59,6 +139,74 @@ Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida 
 - **Desde Mainsail**: _Máquina › Actualizar › `tortillery`_. Actualiza configs, macros y KlipperLCD a la última versión
   publicada. Tu calibración (PID, Z-offset, mallas, input shaper) se conserva.
 - **Por USB** (pantalla y firmware de la placa): copia la carpeta `USB` de la descarga a un pendrive FAT32 y arranca con él.
+
+## ❓ Preguntas frecuentes
+
+<details>
+<summary><b>¿Pierdo la calibración al actualizar?</b></summary>
+
+No. El instalador conserva el bloque `SAVE_CONFIG` de `printer.cfg` (PID, Z-offset, mallas, input shaper) y guarda una
+copia `.orig` de cada archivo que reemplaza. Además, cada cambio de `printer.cfg` se copia solo en
+`printer_data/backup` (y en el USB si está puesto).
+</details>
+
+<details>
+<summary><b>¿La IA cuesta dinero?</b></summary>
+
+Depende del proveedor. Con **Ollama** en tu PC no pagas nada. NVIDIA da créditos gratuitos para empezar. Anthropic,
+OpenAI y Google cobran por uso; para ahorrar, la IA no envía fotos repetidas y solo mira mientras imprimes.
+</details>
+
+<details>
+<summary><b>¿Necesito cámara?</b></summary>
+
+Solo para la IA, las fotos de Telegram y el timelapse. Todo lo demás funciona sin cámara.
+</details>
+
+<details>
+<summary><b>¿Puedo usar el mismo bot de Telegram en dos impresoras?</b></summary>
+
+No. Telegram solo deja a un programa leer los mensajes de cada bot. Crea **un bot por impresora** con @BotFather.
+</details>
+
+<details>
+<summary><b>¿Puedo volver a la Tortillery original o al firmware de Artillery?</b></summary>
+
+Sí: graba en la eMMC la imagen que quieras, igual que grabaste esta. Antes, haz una copia de tu `printer.cfg` desde
+Mainsail.
+</details>
+
+<details>
+<summary><b>¿Qué versión tengo?</b></summary>
+
+En la pantalla: _Ajustes › Información_. En Mainsail: _Máquina › Actualizar › `tortillery`_.
+</details>
+
+## 🔧 Problemas comunes
+
+| Lo que ves | Qué hacer |
+| --- | --- |
+| La pantalla no responde o se queda en el logo | Espera al primer arranque (varios minutos). Si sigue igual, en SSH: `sudo systemctl restart KlipperLCD`. Si no, vuelve a pasar la carpeta `USB` de la descarga. |
+| Error de Klipper en la pantalla | La pantalla dice el motivo en español; pulsa _Reiniciar firmware_. El detalle está en Mainsail › _Máquina_ › `klippy.log`. |
+| Mainsail muestra `tortillery` como **INVALID** | Pasa en impresoras con la 1.0.1. En SSH: `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`). Desde la 1.1.0 ya no ocurre. |
+| Telegram: `409 Conflict` en el log | Otro programa usa el mismo bot (otra impresora, otro script). Usa un bot por impresora. |
+| La IA no detecta fallos | Prueba con `python3 /usr/local/bin/tortillery-ai.py --test` y mira `config/ia_prueba.jpg`: si la cama no se ve, mueve la cámara o pon `recorte:` a mano en `tortillery_ai.cfg`. El log: `journalctl -u tortillery-ai -f`. |
+| La IA pausa sin motivo | Sube `umbral:` o `confirmaciones:` en `tortillery_ai.cfg`, o pon un `modelo_confirmar:`. |
+| No aparece el USB | Formatea el pendrive en FAT32 (o ext4). Sale en Mainsail y en la pantalla dentro de la carpeta `USB`. |
+| WiFi: contraseña mal escrita | Vuelve a conectar desde _Ajustes › WiFi_; las demás redes guardadas no se borran. |
+| La actualización desde Mainsail no se instala | Solo se instalan versiones firmadas y nunca imprimiendo. Mira `journalctl -u tortillery-update`. |
+
+## 🆘 Ayuda y contacto
+
+¿Algo no funciona o tienes una idea? Abre una **[incidencia en GitHub](https://github.com/tecxion/tortillery-plus/issues)**
+y cuenta:
+
+- Modelo (X4 Pro o X4 Plus) y versión de Tortillery+.
+- Qué hiciste, qué esperabas y qué pasó (una foto de la pantalla ayuda mucho).
+- Los logs: `klippy.log` y `moonraker.log` (Mainsail › _Máquina_) y, si es la IA, `journalctl -u tortillery-ai -n 100`.
+
+> [!WARNING]
+> Antes de pegar un log o un archivo de config, **borra tus claves**: el token de Telegram y las API keys de la IA.
 
 ## 📁 Qué hay en este repositorio
 
