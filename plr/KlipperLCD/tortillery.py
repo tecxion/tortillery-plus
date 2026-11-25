@@ -395,6 +395,15 @@ def status_flags(ip, ai_path=AI_STATUS, secrets=SECRETS, cameras=CAMERAS):
             ai_status(ai_path).get('estado') in ('vigilando', 'esperando'), bool(telegram_token(secrets)))
 
 
+def plr_decided(msg):
+    """Respuesta de Klipper que resuelve la pregunta del corte de luz (plr.cfg / plr.py): 'resumed', 'discarded'."""
+    if 'PLR: reanudando' in msg:
+        return 'resumed'
+    if 'PLR: datos de recuperacion borrados' in msg:
+        return 'discarded'
+    return None
+
+
 def last_errors(n=5, path=ERRORS_FILE):
     try:
         with open(path, encoding='utf-8') as f:

@@ -92,6 +92,11 @@ Cancelar / Otra foto**; el **fin** con foto; el vídeo del **timelapse** si est�
 escribirle `/foto`, `/estado`, `/reanudar` y `/cancelar` (solo obedece a tu chat). Utilidades > Más... > QR de Telegram
 abre el bot en el móvil.
 
+**Corte de luz**: sin corriente la impresora no puede avisar en ese momento; al volver, si había una impresión a
+medias, llega un aviso con la hora del corte y de la vuelta, por dónde iba (Z y % del archivo) y los botones
+**Continuar / Descartar** (o `/continuar` y `/descartar`). Lo que elijas en Telegram quita la pregunta de la
+pantalla, y al revés. Antes de continuar comprueba que la pieza sigue pegada a la cama.
+
 ## Malla de la cama y luz LED
 - **Malla automática** (Nivelar > Malla automática, o Utilidades > Mallas > Medir nueva): elige los puntos por lado.
   5x5 es rápida, 6x6 la de siempre, 7x7 y 9x9 más precisas pero más lentas (9x9 son 81 puntos). Se guarda como

@@ -1378,6 +1378,16 @@ class LCD:
             return
         self.write("continueprint.t0.txt=\"%s\"" % name)  # local field: only after the page change
 
+    def plr_done(self, resumed):
+        # Decidido fuera de la pantalla (Telegram, Mainsail): quitar la pregunta del corte de luz
+        self.confirm_action = None
+        if resumed:
+            self.write("printpause.printvalue.txt=\"0\"")
+            self.write("printpause.printprocess.val=0")
+            self.write("page printpause")
+        else:
+            self.write("page main")
+
     def _PrintFile(self, data):
         if self.confirm_action and data[0] in (0x01, 0x0A):
             action, self.confirm_action = self.confirm_action, None

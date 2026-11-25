@@ -135,6 +135,9 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - Avisos de inicio, cancelación y error.
   - **Pausa con foto y botones** (Reanudar / Cancelar / Otra foto).
   - **Fin con foto**, **vídeo del timelapse** y **aviso de mantenimiento**.
+  - **Corte de luz (1.1)**: al volver la corriente avisa de a qué hora se fue y volvió, por dónde iba la impresión y
+    deja **Continuar** o **Descartar** desde Telegram; la pregunta de la pantalla se quita sola. (Sin corriente la
+    impresora no puede avisar en el momento del corte.)
   - Órdenes: `/foto`, `/estado`, `/reanudar`, `/cancelar`.
   - Solo obedece a tu chat.
 - **Extras opcionales** (`extras.sh`): Tailscale, OctoEverywhere, Moonraker-Timelapse, Shake&Tune y **Mobileraker**

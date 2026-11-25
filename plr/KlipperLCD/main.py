@@ -582,6 +582,9 @@ class KlipperLCD ():
             # M600 (laminador o Utilidades): la impresora ya está en pausa; decir qué hacer y abrir Filamento
             self.lcd.show_alert('Cambio de filamento: Retraer el viejo, poner el nuevo, Extruir y luego Reanudar.',
                                 self.lcd.PAGE_PREFILAMENT)
+        decided = tp.plr_decided(str(data))
+        if decided and self.lcd.confirm_action == self.lcd.evt.PLR_RESUME:
+            self.lcd.plr_done(decided == 'resumed')
         msg = self.lcd.format_console_data(data, data_type)
         if msg:
             self.lcd.write_console(msg)

@@ -217,8 +217,8 @@ def print_stats():
     return r['result']['status']['print_stats']
 
 
-def gcode(script):
-    http(MOON + '/printer/gcode/script?script=' + urllib.parse.quote(script), b'', timeout=30, raw=True)
+def gcode(script, timeout=30):
+    http(MOON + '/printer/gcode/script?script=' + urllib.parse.quote(script), b'', timeout=timeout, raw=True)
 
 
 def tg_creds():
@@ -236,10 +236,13 @@ def tg_creds():
 BUTTONS = {'inline_keyboard': [[{'text': '▶️ Reanudar', 'callback_data': 'resume'},
                                 {'text': '⏹ Cancelar', 'callback_data': 'cancel'}],
                                [{'text': '📷 Otra foto', 'callback_data': 'foto'}]]}
+# botones del aviso de corte de luz
+PLR_BUTTONS = {'inline_keyboard': [[{'text': '▶️ Continuar', 'callback_data': 'plr_resume'},
+                                    {'text': '🗑 Descartar', 'callback_data': 'plr_discard'}]]}
 
 
 def telegram(text, jpg, buttons=False):
-    """Texto (jpg None) o foto con texto al chat del bot; con buttons, Reanudar/Cancelar/Otra foto."""
+    """Texto (jpg None) o foto con texto al chat del bot; buttons True = Reanudar/Cancelar/Otra foto, o un teclado."""
     cred = tg_creds()
     if not cred:
         return
@@ -247,7 +250,7 @@ def telegram(text, jpg, buttons=False):
     if jpg is None:
         body = {'chat_id': chat, 'text': text}
         if buttons:
-            body['reply_markup'] = BUTTONS
+            body['reply_markup'] = BUTTONS if buttons is True else buttons
         http('https://api.telegram.org/bot%s/sendMessage' % token, body, timeout=30)
         return
     tg_file(token, chat, 'sendPhoto', 'photo', 'foto.jpg', 'image/jpeg', jpg, text, buttons)
@@ -256,7 +259,8 @@ def telegram(text, jpg, buttons=False):
 def tg_file(token, chat, method, field, fname, ctype, data, text, buttons=False, timeout=30):
     bound = uuid.uuid4().hex
     parts = []
-    fields = [('chat_id', chat), ('caption', text)] + ([('reply_markup', json.dumps(BUTTONS))] if buttons else [])
+    markup = BUTTONS if buttons is True else buttons
+    fields = [('chat_id', chat), ('caption', text)] + ([('reply_markup', json.dumps(markup))] if markup else [])
     for name, value in fields:
         parts.append(('--%s\r\nContent-Disposition: form-data; name="%s"\r\n\r\n%s\r\n'
                       % (bound, name, value)).encode())
@@ -428,7 +432,8 @@ def handle_update(u, chat):
         cred = tg_creds()
         http('https://api.telegram.org/bot%s/answerCallbackQuery' % cred[0], {'callback_query_id': cb['id']},
              timeout=15)
-        cmd = {'resume': '/reanudar', 'cancel': '/cancelar', 'foto': '/foto'}.get(cb.get('data'), '')
+        cmd = {'resume': '/reanudar', 'cancel': '/cancelar', 'foto': '/foto', 'plr_resume': '/continuar',
+               'plr_discard': '/descartar'}.get(cb.get('data'), '')
     else:
         cmd = (msg.get('text') or '').split('@')[0].strip().lower()
     if cmd == '/foto':
@@ -447,8 +452,116 @@ def handle_update(u, chat):
             telegram('⏹ Impresión cancelada', None)
         else:
             telegram('No hay ninguna impresión', None)
+    elif cmd == '/continuar':
+        plr, ps = plr_status()
+        if not plr.get('pending'):
+            telegram('No hay ninguna impresión interrumpida', None)
+        elif ps.get('state') in ('printing', 'paused') or PLR_BUSY.is_set():
+            telegram('Ya está imprimiendo', None)
+        elif not plr.get('file_exists'):
+            telegram('No encuentro %s: mete el USB con el archivo y vuelve a pulsar Continuar' % plr.get('file'), None)
+        else:
+            PLR_BUSY.set()
+            telegram('▶️ Continuando %s: calienta, vuelve a su sitio y sigue (unos minutos)' % plr.get('file'), None)
+            threading.Thread(target=plr_resume, daemon=True).start()
+    elif cmd == '/descartar':
+        plr, ps = plr_status()
+        if plr.get('pending') and ps.get('state') not in ('printing', 'paused') and not PLR_BUSY.is_set():
+            gcode('PLR_CLEAR')
+            telegram('🗑 Impresión interrumpida descartada', None)
+        else:
+            telegram('No hay nada que descartar', None)
     elif cmd in ('/start', '/ayuda', '/help'):
         telegram('Órdenes: /foto /estado /reanudar /cancelar', None)
+
+
+# ---- corte de luz: la impresora no puede avisar sin corriente; avisa al volver (plr_state.json pendiente)
+PLR_FILE = PD + '/plr_state.json'      # lo escribe plr.py cada 5 s mientras imprime
+PLR_SENT = PD + '/.plr_avisado'        # el corte ya avisado (para no repetirlo si se reinicia el servicio)
+PLR_BUSY = threading.Event()           # RESUME_INTERRUPTED en marcha desde Telegram
+
+
+def plr_status():
+    r = json.loads(http(MOON + '/printer/objects/query?plr&print_stats', timeout=10))['result']['status']
+    return r.get('plr') or {}, r['print_stats']
+
+
+def plr_resume():
+    """RESUME_INTERRUPTED tarda minutos (calentar): la respuesta de Moonraker llega al acabar o con el error."""
+    try:
+        gcode('RESUME_INTERRUPTED', timeout=1800)
+    except urllib.error.HTTPError as e:
+        try:
+            msg = json.loads(e.read())['error']['message']
+        except (ValueError, KeyError, TypeError):
+            msg = str(e)
+        telegram('⚠️ No se pudo continuar: %s' % msg, None)
+    except (urllib.error.URLError, OSError) as e:
+        log('PLR continuar: %s' % e)
+    finally:
+        PLR_BUSY.clear()
+
+
+def boot_time():
+    with open('/proc/uptime') as f:
+        return time.time() - float(f.read().split()[0])
+
+
+def hhmm(t, ref):
+    lt = time.localtime(t)
+    return time.strftime('%H:%M' if lt[:3] == time.localtime(ref)[:3] else '%d/%m %H:%M', lt)
+
+
+def plr_text(plr, cut, back, size=0):
+    """Texto del aviso. cut: último guardado (≈ el corte), back: arranque."""
+    mins = max(0, int((back - cut) // 60))
+    lines = ['⚡ Corte de luz durante la impresión de %s' % plr.get('file', '?'),
+             'Se apagó hacia las %s y volvió a las %s (%s sin corriente).' % (
+                 hhmm(cut, back), hhmm(back, back), '%d h %d min' % (mins // 60, mins % 60) if mins >= 60
+                 else '%d min' % mins)]
+    pos = 'Iba por Z %.2f mm' % plr.get('z', 0)
+    if size:
+        pos += ' (%d %% del archivo)' % (100 * plr.get('position', 0) // size)
+    lines.append(pos + '.')
+    if not plr.get('file_exists', True):
+        lines.append('No encuentro el archivo: mete el USB antes de continuar.')
+    lines.append('Comprueba que la pieza sigue pegada. ¿Continuar? (también desde la pantalla)')
+    return '\n'.join(lines)
+
+
+def power_loss_check(tries=60):
+    """Al arrancar: si hay una impresión interrumpida, un aviso con Continuar/Descartar (una vez por corte)."""
+    for _ in range(tries):   # Klipper tarda en estar listo tras el arranque
+        try:
+            plr, ps = plr_status()
+            break
+        except (urllib.error.URLError, OSError, KeyError, ValueError):
+            time.sleep(10)
+    else:
+        return
+    if not plr.get('pending') or ps.get('state') in ('printing', 'paused') or not tg_creds():
+        return
+    try:
+        cut = os.path.getmtime(PLR_FILE)
+    except OSError:
+        cut = time.time()
+    key = '%s %d' % (plr.get('file'), cut)
+    try:
+        with open(PLR_SENT) as f:
+            if f.read().strip() == key:
+                return
+    except OSError:
+        pass
+    back = boot_time()
+    try:
+        meta = json.loads(http(MOON + '/server/files/metadata?filename=' + urllib.parse.quote(plr.get('file', '')),
+                               timeout=10))['result']
+        size = meta.get('size', 0)
+    except (urllib.error.URLError, OSError, KeyError, ValueError):
+        size = 0
+    telegram(plr_text(plr, cut, back, size), None, PLR_BUTTONS)
+    with open(PLR_SENT, 'w') as f:
+        f.write(key)
 
 
 def bot_loop():
@@ -548,7 +661,11 @@ def on_event(prev, state, st):
 
 
 def events_loop():
-    """Avisos que no da Moonraker: pausa con foto y botones, fin con foto, vídeo del timelapse, mantenimiento."""
+    """Avisos que no da Moonraker: corte de luz, pausa con foto y botones, fin con foto, timelapse, mantenimiento."""
+    try:
+        power_loss_check()
+    except (urllib.error.URLError, OSError, KeyError, ValueError) as e:
+        log('Telegram corte de luz: %s' % e)
     prev = None
     while True:
         time.sleep(20)

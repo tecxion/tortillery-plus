@@ -58,6 +58,7 @@ La impresora te escribe por Telegram:
 - ▶️ **Inicio** y ⏹️ **cancelación**, también si cancelas desde la pantalla.
 - ⏸️ **Pausa con foto** y botones: _Reanudar_, _Cancelar_ y _Otra foto_.
 - ✅ **Fin con foto** y el tiempo que ha tardado.
+- ⚡ **Corte de luz**: al volver la corriente te dice cuándo se fue, por dónde iba y te deja _Continuar_ o _Descartar_.
 - 🤖 Si la IA ve un fallo, pausa y te manda la foto.
 - 🎬 Vídeo del timelapse y aviso de mantenimiento.
 
@@ -174,7 +175,8 @@ No hace falta para usar la impresora, pero sirve para ver logs, reiniciar servic
 | Espacio libre                               | `df -h /`                                                          |
 | Reiniciar / apagar                          | `sudo reboot` · `sudo poweroff`                                    |
 
-**Extras opcionales** (se instalan uno a uno; volver a ejecutarlos solo los actualiza):
+**Extras opcionales** (se instalan uno a uno; volver a ejecutarlos solo los actualiza). La imagen no trae ningún extra
+instalado: `config/extras/` está vacía hasta que instalas uno que use macros (timelapse o Shake&Tune).
 
 ```bash
 sudo bash ~/tortillery/tortillery_plus/extras.sh tailscale   # Mainsail y SSH desde fuera de casa
