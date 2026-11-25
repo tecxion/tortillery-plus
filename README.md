@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-f1bf00)
 
-[Descargar](#-descarga) · [Instalar](#-instalación) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md)
+[Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md)
 
 </div>
 
@@ -92,17 +92,17 @@ Se configura en `tortillery_ai.cfg` desde Mainsail: [cómo hacerlo](tortillery_p
 
 ## ⚖️ Tortillery y Tortillery+
 
-|                                          | Tortillery original | **Tortillery+**                 |
-| ---------------------------------------- | :-----------------: | :-----------------------------: |
-| Klipper, Moonraker y Mainsail en la eMMC |         ✅          |               ✅                |
-| Instalar sin SSH (asistente en pantalla) |          —          |               ✅                |
-| Claves SSH e identidad propias por impresora |      —          |               ✅                |
-| WiFi desde la pantalla                   |          —          |               ✅                |
-| Calibración guiada (input shaper, PA…)   |          —          |               ✅                |
-| Malla 5x5 a 9x9 y luz LED a medida       |          —          |               ✅                |
-| Vigilancia con IA y Telegram             |          —          |               ✅                |
-| Actualizar desde Mainsail (versiones firmadas) |       —       |               ✅                |
-| Apagado de calentadores en pausas largas |          —          |               ✅                |
+|                                                | Tortillery original | **Tortillery+** |
+| ---------------------------------------------- | :-----------------: | :-------------: |
+| Klipper, Moonraker y Mainsail en la eMMC       |         ✅          |       ✅        |
+| Instalar sin SSH (asistente en pantalla)       |          —          |       ✅        |
+| Claves SSH e identidad propias por impresora   |          —          |       ✅        |
+| WiFi desde la pantalla                         |          —          |       ✅        |
+| Calibración guiada (input shaper, PA…)         |          —          |       ✅        |
+| Malla 5x5 a 9x9 y luz LED a medida             |          —          |       ✅        |
+| Vigilancia con IA y Telegram                   |          —          |       ✅        |
+| Actualizar desde Mainsail (versiones firmadas) |          —          |       ✅        |
+| Apagado de calentadores en pausas largas       |          —          |       ✅        |
 
 ## 📦 Descarga
 
@@ -140,6 +140,53 @@ Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida 
   publicada. Tu calibración (PID, Z-offset, mallas, input shaper) se conserva.
 - **Por USB** (pantalla y firmware de la placa): copia la carpeta `USB` de la descarga a un pendrive FAT32 y arranca con él.
 
+## 💻 Conectarse por SSH
+
+No hace falta para usar la impresora, pero sirve para ver logs, reiniciar servicios o instalar extras.
+
+1. Mira la **IP** de la impresora en la pantalla (_Ajustes_).
+2. Abre una terminal (en Windows, PowerShell ya trae `ssh`; también vale [PuTTY](https://www.putty.org/)) y escribe:
+
+   ```bash
+   ssh mks@<IP de la impresora>
+   ```
+
+3. Usuario `mks`, contraseña `makerbase`. La primera vez te pregunta si confías en la impresora: escribe `yes`.
+
+> [!IMPORTANT]
+> Cambia la contraseña nada más entrar con `passwd`, sobre todo si abres la impresora a internet. `root` no puede
+> entrar por SSH con contraseña: usa `mks` y `sudo`.
+
+### Comandos útiles
+
+| Para qué | Comando |
+| --- | --- |
+| Ver la IP | `hostname -I` |
+| Estado de Klipper, Moonraker y la pantalla | `systemctl status klipper moonraker KlipperLCD` |
+| Reiniciar Klipper / la pantalla / Moonraker | `sudo systemctl restart klipper` · `KlipperLCD` · `moonraker` |
+| Log de Klipper en directo | `tail -f ~/printer_data/logs/klippy.log` |
+| Log de la pantalla | `journalctl -u KlipperLCD -f` |
+| Log de la IA y Telegram | `journalctl -u tortillery-ai -f` |
+| Probar la IA con la cámara (o con una foto) | `python3 /usr/local/bin/tortillery-ai.py --test [foto.jpg]` |
+| Log de las actualizaciones | `journalctl -u tortillery-update -n 50` |
+| Reparar o reinstalar Tortillery+ | `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`) |
+| Redes WiFi a la vista / configurar red | `nmcli device wifi list` · `sudo nmtui` |
+| Espacio libre | `df -h /` |
+| Reiniciar / apagar | `sudo reboot` · `sudo poweroff` |
+
+**Extras opcionales** (se instalan uno a uno; volver a ejecutarlos solo los actualiza):
+
+```bash
+sudo bash ~/tortillery/tortillery_plus/extras.sh tailscale   # Mainsail y SSH desde fuera de casa
+bash ~/tortillery/tortillery_plus/extras.sh octoeverywhere    # acceso remoto y avisos desde la app
+sudo bash ~/tortillery/tortillery_plus/extras.sh timelapse   # vídeo de cada impresión (necesita cámara)
+bash ~/tortillery/tortillery_plus/extras.sh shaketune         # gráficas de correas y vibraciones
+bash ~/tortillery/tortillery_plus/extras.sh mobileraker       # avisos push en el móvil
+```
+
+> [!CAUTION]
+> No apagues ni reinicies mientras imprime, y no edites `printer.cfg` por SSH con una impresión en marcha.
+
 ## ❓ Preguntas frecuentes
 
 <details>
@@ -148,6 +195,7 @@ Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida 
 No. El instalador conserva el bloque `SAVE_CONFIG` de `printer.cfg` (PID, Z-offset, mallas, input shaper) y guarda una
 copia `.orig` de cada archivo que reemplaza. Además, cada cambio de `printer.cfg` se copia solo en
 `printer_data/backup` (y en el USB si está puesto).
+
 </details>
 
 <details>
@@ -155,18 +203,21 @@ copia `.orig` de cada archivo que reemplaza. Además, cada cambio de `printer.cf
 
 Depende del proveedor. Con **Ollama** en tu PC no pagas nada. NVIDIA da créditos gratuitos para empezar. Anthropic,
 OpenAI y Google cobran por uso; para ahorrar, la IA no envía fotos repetidas y solo mira mientras imprimes.
+
 </details>
 
 <details>
 <summary><b>¿Necesito cámara?</b></summary>
 
 Solo para la IA, las fotos de Telegram y el timelapse. Todo lo demás funciona sin cámara.
+
 </details>
 
 <details>
 <summary><b>¿Puedo usar el mismo bot de Telegram en dos impresoras?</b></summary>
 
 No. Telegram solo deja a un programa leer los mensajes de cada bot. Crea **un bot por impresora** con @BotFather.
+
 </details>
 
 <details>
@@ -174,27 +225,32 @@ No. Telegram solo deja a un programa leer los mensajes de cada bot. Crea **un bo
 
 Sí: graba en la eMMC la imagen que quieras, igual que grabaste esta. Antes, haz una copia de tu `printer.cfg` desde
 Mainsail.
+
 </details>
 
 <details>
 <summary><b>¿Qué versión tengo?</b></summary>
 
 En la pantalla: _Ajustes › Información_. En Mainsail: _Máquina › Actualizar › `tortillery`_.
+
 </details>
 
 ## 🔧 Problemas comunes
 
-| Lo que ves | Qué hacer |
-| --- | --- |
-| La pantalla no responde o se queda en el logo | Espera al primer arranque (varios minutos). Si sigue igual, en SSH: `sudo systemctl restart KlipperLCD`. Si no, vuelve a pasar la carpeta `USB` de la descarga. |
-| Error de Klipper en la pantalla | La pantalla dice el motivo en español; pulsa _Reiniciar firmware_. El detalle está en Mainsail › _Máquina_ › `klippy.log`. |
-| Mainsail muestra `tortillery` como **INVALID** | Pasa en impresoras con la 1.0.1. En SSH: `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`). Desde la 1.1.0 ya no ocurre. |
-| Telegram: `409 Conflict` en el log | Otro programa usa el mismo bot (otra impresora, otro script). Usa un bot por impresora. |
-| La IA no detecta fallos | Prueba con `python3 /usr/local/bin/tortillery-ai.py --test` y mira `config/ia_prueba.jpg`: si la cama no se ve, mueve la cámara o pon `recorte:` a mano en `tortillery_ai.cfg`. El log: `journalctl -u tortillery-ai -f`. |
-| La IA pausa sin motivo | Sube `umbral:` o `confirmaciones:` en `tortillery_ai.cfg`, o pon un `modelo_confirmar:`. |
-| No aparece el USB | Formatea el pendrive en FAT32 (o ext4). Sale en Mainsail y en la pantalla dentro de la carpeta `USB`. |
-| WiFi: contraseña mal escrita | Vuelve a conectar desde _Ajustes › WiFi_; las demás redes guardadas no se borran. |
-| La actualización desde Mainsail no se instala | Solo se instalan versiones firmadas y nunca imprimiendo. Mira `journalctl -u tortillery-update`. |
+> [!WARNING]
+> Muchas de las pantallas cogeladas las he solucionado apagando y encendiendo de nuevo.
+
+| Lo que ves                                     | Qué hacer                                                                                                                                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| La pantalla no responde o se queda en el logo  | Espera al primer arranque (varios minutos). Si sigue igual, en SSH: `sudo systemctl restart KlipperLCD`. Si no, vuelve a pasar la carpeta `USB` de la descarga.                                                           |
+| Error de Klipper en la pantalla                | La pantalla dice el motivo en español; pulsa _Reiniciar firmware_. El detalle está en Mainsail › _Máquina_ › `klippy.log`.                                                                                                |
+| Mainsail muestra `tortillery` como **INVALID** | Pasa en impresoras con la 1.0.1. En SSH: `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`). Desde la 1.1.0 ya no ocurre.                                                                                 |
+| Telegram: `409 Conflict` en el log             | Otro programa usa el mismo bot (otra impresora, otro script). Usa un bot por impresora.                                                                                                                                   |
+| La IA no detecta fallos                        | Prueba con `python3 /usr/local/bin/tortillery-ai.py --test` y mira `config/ia_prueba.jpg`: si la cama no se ve, mueve la cámara o pon `recorte:` a mano en `tortillery_ai.cfg`. El log: `journalctl -u tortillery-ai -f`. |
+| La IA pausa sin motivo                         | Sube `umbral:` o `confirmaciones:` en `tortillery_ai.cfg`, o pon un `modelo_confirmar:`.                                                                                                                                  |
+| No aparece el USB                              | Formatea el pendrive en FAT32 (o ext4). Sale en Mainsail y en la pantalla dentro de la carpeta `USB`.                                                                                                                     |
+| WiFi: contraseña mal escrita                   | Vuelve a conectar desde _Ajustes › WiFi_; las demás redes guardadas no se borran.                                                                                                                                         |
+| La actualización desde Mainsail no se instala  | Solo se instalan versiones firmadas y nunca imprimiendo. Mira `journalctl -u tortillery-update`.                                                                                                                          |
 
 ## 🆘 Ayuda y contacto
 
@@ -254,7 +310,7 @@ Si te gusta lo que hago y quieres ayudarme a seguir creciendo y creando contenid
 <p align="center">
   <img alt="GitHub watchers" src="https://img.shields.io/github/watchers/tecxion/tortillery-plus?style=flat-square">
   &nbsp;
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/tecxion?style=flat-square">
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/tecxion/tortillery-plus?style=flat-square">
   &nbsp;
 </p>
 </div>
