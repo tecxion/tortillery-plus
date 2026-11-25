@@ -4,7 +4,7 @@
 # Every replaced file is backed up as <file>.orig (only the first time).
 set -e
 [ "$(id -u)" = 0 ] || { echo "Ejecuta con sudo"; exit 1; }
-VERSION="1.1.1"
+VERSION="1.1.2"
 REPO_URL="https://github.com/tecxion/tortillery-plus.git"   # repo público de Tortillery+ (update_manager)
 MODEL="${1^^}"
 [ "$MODEL" = PRO ] || [ "$MODEL" = PLUS ] || { echo "Uso: sudo bash install.sh PRO|PLUS"; exit 1; }

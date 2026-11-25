@@ -119,6 +119,21 @@ PA, aceleración y `rotation_distance` se guardan en `config/tortillery_vars.cfg
 Gráficas de correas y vibraciones (opcional): `bash ~/tortillery/tortillery_plus/extras.sh shaketune`
 (sin sudo) y en Mainsail `COMPARE_BELTS_RESPONSES` / `AXES_SHAPER_CALIBRATION`.
 
+## Homing exacto de X/Y (recomendado para la recuperación tras corte de luz)
+La X4 no tiene finales de carrera en X e Y: el homing lo detecta el driver cuando el motor choca, y el punto puede
+cambiar unas décimas de un homing a otro. Al imprimir de corrido no se nota, pero al reanudar tras un corte (o tras un
+`G28 X Y` en una pausa) la pieza sigue desplazada esa diferencia.
+
+1. En la consola de Mainsail, sin imprimir: `PRUEBA_HOMING` (hace 9 homings desde puntos distintos, unos 2 min). Dice
+   cuántos mm varía cada eje.
+2. Si sale **0,30 mm o menos**: `FIJAR_HOMING`. Guarda la fase de los motores (`[endstop_phase stepper_x/y]` en
+   `printer.cfg`) y reinicia Klipper: desde entonces cada homing acaba en el mismo micropaso, exacto.
+3. Si sale más: tensa las correas y repite. No lo fijes con más variación (podría quedar desplazado 0,8 mm).
+
+Para deshacerlo, borra las secciones `[endstop_phase stepper_x]` y `[endstop_phase stepper_y]` del final de
+`printer.cfg` y reinicia el firmware. Si algún día un homing falla con "Endstop stepper_x incorrect phase", deshazlo y
+repite la prueba (por ejemplo, después de cambiar una correa o un motor).
+
 ## Rendimiento (lo aplica install.sh)
 CPU en `performance` (`/etc/default/cpufrequtils`, lo aplica Armbian al arrancar), Klipper con más prioridad
 (`klipper.service.d/tortillery.conf`, `Nice=-10`) y `vnstat` desactivado (escribía en la eMMC sin usarse).

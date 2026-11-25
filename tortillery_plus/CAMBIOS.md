@@ -85,6 +85,9 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - Patrón de pressure advance.
   - Extrusor (100 mm).
   - `[axis_twist_compensation]`.
+  - **Homing exacto de X/Y (1.1)**: `PRUEBA_HOMING` mide en mm cuánto varía el homing sin finales de carrera y
+    `FIJAR_HOMING` guarda la fase de los motores (`endstop_phase`) para que caiga siempre en el mismo micropaso. Así
+    la recuperación tras un corte de luz vuelve al punto exacto.
   - Valores en `tortillery_vars.cfg`.
 - Utilidades:
   - `COPIA_SEGURIDAD_USB`.
