@@ -108,7 +108,7 @@ Se configura en `tortillery_ai.cfg` desde Mainsail: [cómo hacerlo](tortillery_p
 
 La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y están en Google Drive:
 
-> **[⬇️ Descargar Tortillery+ (Google Drive)](ENLACE_DE_GOOGLE_DRIVE)**
+> **[⬇️ Descargar Tortillery+ (Terabox)](https://1024terabox.com/s/1VxnkAWIMICElKzex2T21og)**
 
 ## 🧰 Qué necesitas
 
@@ -159,20 +159,20 @@ No hace falta para usar la impresora, pero sirve para ver logs, reiniciar servic
 
 ### Comandos útiles
 
-| Para qué | Comando |
-| --- | --- |
-| Ver la IP | `hostname -I` |
-| Estado de Klipper, Moonraker y la pantalla | `systemctl status klipper moonraker KlipperLCD` |
-| Reiniciar Klipper / la pantalla / Moonraker | `sudo systemctl restart klipper` · `KlipperLCD` · `moonraker` |
-| Log de Klipper en directo | `tail -f ~/printer_data/logs/klippy.log` |
-| Log de la pantalla | `journalctl -u KlipperLCD -f` |
-| Log de la IA y Telegram | `journalctl -u tortillery-ai -f` |
-| Probar la IA con la cámara (o con una foto) | `python3 /usr/local/bin/tortillery-ai.py --test [foto.jpg]` |
-| Log de las actualizaciones | `journalctl -u tortillery-update -n 50` |
-| Reparar o reinstalar Tortillery+ | `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`) |
-| Redes WiFi a la vista / configurar red | `nmcli device wifi list` · `sudo nmtui` |
-| Espacio libre | `df -h /` |
-| Reiniciar / apagar | `sudo reboot` · `sudo poweroff` |
+| Para qué                                    | Comando                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| Ver la IP                                   | `hostname -I`                                                      |
+| Estado de Klipper, Moonraker y la pantalla  | `systemctl status klipper moonraker KlipperLCD`                    |
+| Reiniciar Klipper / la pantalla / Moonraker | `sudo systemctl restart klipper` · `KlipperLCD` · `moonraker`      |
+| Log de Klipper en directo                   | `tail -f ~/printer_data/logs/klippy.log`                           |
+| Log de la pantalla                          | `journalctl -u KlipperLCD -f`                                      |
+| Log de la IA y Telegram                     | `journalctl -u tortillery-ai -f`                                   |
+| Probar la IA con la cámara (o con una foto) | `python3 /usr/local/bin/tortillery-ai.py --test [foto.jpg]`        |
+| Log de las actualizaciones                  | `journalctl -u tortillery-update -n 50`                            |
+| Reparar o reinstalar Tortillery+            | `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`) |
+| Redes WiFi a la vista / configurar red      | `nmcli device wifi list` · `sudo nmtui`                            |
+| Espacio libre                               | `df -h /`                                                          |
+| Reiniciar / apagar                          | `sudo reboot` · `sudo poweroff`                                    |
 
 **Extras opcionales** (se instalan uno a uno; volver a ejecutarlos solo los actualiza):
 
