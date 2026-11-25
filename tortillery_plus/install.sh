@@ -4,7 +4,7 @@
 # Every replaced file is backed up as <file>.orig (only the first time).
 set -e
 [ "$(id -u)" = 0 ] || { echo "Ejecuta con sudo"; exit 1; }
-VERSION="1.1.3"
+VERSION="1.1.4"
 REPO_URL="https://github.com/tecxion/tortillery-plus.git"   # repo público de Tortillery+ (update_manager)
 MODEL="${1^^}"
 [ "$MODEL" = PRO ] || [ "$MODEL" = PLUS ] || { echo "Uso: sudo bash install.sh PRO|PLUS"; exit 1; }
@@ -46,6 +46,14 @@ for pair in klipper.bin:mcu 800_480.tft:tft; do
 done
 echo "Tortillery+ $VERSION" > /etc/tortillery-release
 put "$PLR/plr.py"                   /home/mks/klipper/klippy/extras/plr.py 644 mks
+# extras propios en el repo de Klipper: que git los ignore (Moonraker avisaba "Repo has untracked source files")
+EXC=/home/mks/klipper/.git/info/exclude
+if [ -d /home/mks/klipper/.git ]; then
+    for f in klippy/extras/plr.py klippy/extras/gcode_shell_command.py; do
+        grep -qxF "$f" "$EXC" 2>/dev/null || echo "$f" >> "$EXC"
+    done
+    chown mks:mks "$EXC"
+fi
 put "$PLR/plr.cfg"                  "$CFG/plr.cfg"                         644 mks
 put "$PLR/KlipperLCD/lcd.py"        /home/mks/KlipperLCD/lcd.py            644 mks
 put "$PLR/KlipperLCD/main.py"       /home/mks/KlipperLCD/main.py           644 mks
