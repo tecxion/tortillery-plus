@@ -111,6 +111,11 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
     Sin filamento (la de Filamento calentaba a la temperatura del material elegido).
   - **Tus ajustes no se pierden (1.1.5)**: `printer.cfg` incluye al final `config/ajustes/*.cfg`, que las
     actualizaciones no tocan; lo que pongas ahí gana sobre el resto (guía en `printer/README.md`).
+  - **La pantalla ya no se queda colgada (1.1.5)**: las órdenes que manda (sacar filamento, temperaturas...) iban
+    por el mismo bucle que la actualiza y sin límite de tiempo; una orden larga o que no contestaba la dejaba
+    congelada y lo que se pulsaba después no llegaba a Klipper. Ahora van aparte y en orden.
+  - **Tras un corte de luz no reanuda sin filamento (1.1.5)**: si el sensor no detecta filamento, _Continuar_ avisa en
+    vez de imprimir al aire.
   - **Nombre en la red (1.1.5)**: `http://tortilleryplus.local` (antes había que buscar la IP).
   - **Purga sin etiquetas de objetos (1.1.5)**: la de Artillery, 8 mm más adentro; en el borde se podía salir de la cama.
   - **Homing de X/Y fiable (1.1.5)**: a 20 mm/s y con la sensibilidad ajustada: ya no golpea el tope ni se para antes, y `PRUEBA_HOMING` baja de varios mm a 0,2 mm.

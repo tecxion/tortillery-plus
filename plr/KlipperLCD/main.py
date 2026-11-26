@@ -15,6 +15,8 @@ from datetime import timedelta
 
 from urllib.parse import quote
 
+import requests
+
 from printer import PrinterData
 from lcd import LCD, _printerData
 import tortillery as tp
@@ -41,6 +43,10 @@ class KlipperLCD ():
         self.lcd.start() 
         # sin clave API: Moonraker confía en 127.0.0.1 (trusted_clients); antes iba una clave fija de otra máquina
         self.printer = PrinterData('', URL=("127.0.0.1"), klippy_sock='/home/mks/printer_data/comms/klippy.sock', callback=self.printer_callback,debug=DEBUG)
+        # las órdenes de la pantalla, fuera del bucle de printer.py: una orden larga ya no congela la pantalla
+        op = self.printer.op
+        self.printer.postREST = tp.GcodeSender(
+            lambda path, js: requests.post(op.base_address + path, json=js, headers=dict(op.s.headers), timeout=3600))
         self.running = False
         self.wait_probe = False
         self.thumbnail_inprogress = False

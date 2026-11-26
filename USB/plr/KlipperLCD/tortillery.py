@@ -1,8 +1,10 @@
 # Tortillery+ helpers for KlipperLCD (pure functions, no serial/screen access)
 import os
 import re
+import queue
 import socket
 import time
+from threading import Thread
 
 MAINTENANCE_FILE = os.path.expanduser('~/printer_data/tortillery_maintenance')
 MAINTENANCE_HOURS = 200   # reminder interval: grease lead screws, check belts
@@ -506,3 +508,30 @@ def watchdog_loop():
         if alive():
             sd_notify('WATCHDOG=1')   # si el refresco se cuelga o muere, systemd reinicia KlipperLCD
         time.sleep(20)
+
+
+class GcodeSender:
+    """Manda a Moonraker las órdenes de la pantalla (printer.postREST) en orden y sin congelarla.
+    printer.py hacía cada POST, bloqueante y sin límite de tiempo, dentro de su bucle asyncio: mientras una orden larga
+    (M109 + sacar 100 mm) o una que no contestaba seguía pendiente, la pantalla no se actualizaba y nada de lo que se
+    pulsaba llegaba a Klipper. Ahora van en un hilo propio; cada una espera a la anterior como mucho `wait` segundos
+    (Klipper las ejecuta igualmente en el orden en que llegan)."""
+
+    def __init__(self, post, wait=20):
+        self.post, self.wait, self.q = post, wait, queue.Queue()
+        Thread(target=self._run, daemon=True).start()
+
+    def __call__(self, path, json=None):
+        self.q.put((path, json))
+
+    def _run(self):
+        while True:
+            t = Thread(target=self._send, args=self.q.get(), daemon=True)
+            t.start()
+            t.join(self.wait)
+
+    def _send(self, path, json):
+        try:
+            self.post(path, json)
+        except Exception as e:   # Moonraker caído o Klipper reiniciando: se pierde esa orden, no la pantalla
+            print('Moonraker %s: %s' % (path, e))
