@@ -83,6 +83,14 @@ class PLR:
         state = self.print_stats.get_status(eventtime)['state']
         if state == 'printing' and self.sdcard.is_active():
             self._snapshot(eventtime)
+        elif state == 'paused' and self.data is not None:
+            # La pausa sube Z (PAUSE Z=20) y se puede mover a mano: RESUME_INTERRUPTED parte de toolhead_z (Z no se
+            # vuelve a homear), así que tiene que ser donde está el cabezal de verdad, no donde estaba al pausar.
+            # Si no, tras un corte en pausa reanudaba 20 mm por encima de la pieza, imprimiendo al aire.
+            z = self.toolhead.get_position()[2]
+            if z != self.data['toolhead_z']:
+                self.data = dict(self.data, toolhead_z=z)
+                self.write_queue.put(dict(self.data))
         elif (state in ('complete', 'cancelled', 'standby')
               and self.last_state in ('printing', 'paused')
               and self.data is not None):
