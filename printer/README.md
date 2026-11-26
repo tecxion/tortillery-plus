@@ -10,6 +10,9 @@
 
 ---
 
+> [!TIP]
+> En **[ejemplos](../ejemplos/README.md)** tienes cada archivo de esta guía comentado, listo para copiar.
+
 Todos los archivos están en Mainsail › **Máquina** (carpeta `config`). Se editan ahí mismo: _Guardar y reiniciar_
 aplica el cambio.
 
@@ -57,6 +60,8 @@ las actualizaciones no lo tocan.
    ```
 
 4. _Guardar y reiniciar_.
+
+Tienes un archivo con todas estas opciones comentadas en [`ejemplos/ajustes/mis_ajustes.cfg`](../ejemplos/ajustes/mis_ajustes.cfg).
 
 Para volver a lo de serie, borra la línea (o el archivo) y reinicia el firmware.
 

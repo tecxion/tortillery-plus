@@ -1,0 +1,31 @@
+=======================================================================================================================
+ Tortillery+ · G-code de inicio y fin del laminador / Slicer start and end G-code
+=======================================================================================================================
+DÓNDE: en el laminador, perfil de la impresora > G-code de inicio / fin. Sustituye todo lo que haya.
+(EN)   In the slicer: printer profile > Start / End G-code. Replace everything that's there.
+
+PRINT_START calienta la cama, hace home, malla solo bajo las piezas, calienta la boquilla y purga.
+MATERIAL= aplica el pressure advance guardado de ese material (PLA, PETG, ABS/ASA o TPU).
+Añade PURGE=0 al final si no quieres la línea de purga.
+(EN) PRINT_START heats the bed, homes, meshes only under the parts, heats the nozzle and purges.
+     MATERIAL= applies the saved pressure advance for that material. Add PURGE=0 to skip the purge line.
+
+----- OrcaSlicer · G-code de inicio / Start G-code -----
+PRINT_START BED=[bed_temperature_initial_layer_single] EXTRUDER=[nozzle_temperature_initial_layer] MATERIAL=[filament_type]
+
+----- Cura · G-code de inicio / Start G-code -----
+PRINT_START BED={material_bed_temperature_layer_0} EXTRUDER={material_print_temperature_layer_0} MATERIAL={material_type}
+
+----- G-code de fin (los dos) / End G-code (both) -----
+PRINT_END
+
+----- Cambio de filamento a mitad de impresión / Filament change mid-print -----
+En la capa que quieras, añade / At the layer you want, add:
+M600
+La pantalla abre "Cargar filamento" a la temperatura de la impresión.
+(EN) The screen opens "Load filament" at the print temperature.
+
+OrcaSlicer: deja activado "Label objects" (viene así). Cura: sube el archivo por Mainsail para que Moonraker añada
+las etiquetas de objetos (sin ellas mide la cama entera y purga en el borde).
+(EN) OrcaSlicer: keep "Label objects" on (default). Cura: upload through Mainsail so Moonraker adds object labels
+     (without them it meshes the whole bed and purges at the edge).

@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Language](https://img.shields.io/badge/screen-English%20%7C%20Espa%C3%B1ol-f1bf00)
 
-[Download](#-download) · [Install](#-installation) · [SSH](#-connecting-over-ssh) · [FAQ](#-frequently-asked-questions) · [Troubleshooting](#-common-problems) · [Changes](../tortillery_plus/CAMBIOS.md) · [Full guide](../tortillery_plus/README.md) · [Customise](printer/README.md) · [🇪🇸 Español](../README.md)
+[Download](#-download) · [Install](#-installation) · [SSH](#-connecting-over-ssh) · [FAQ](#-frequently-asked-questions) · [Troubleshooting](#-common-problems) · [Changes](../tortillery_plus/CAMBIOS.md) · [Full guide](../tortillery_plus/README.md) · [Customise](printer/README.md) · [Examples](../ejemplos/README.md) · [🇪🇸 Español](../README.md)
 
 </div>
 
@@ -75,7 +75,7 @@ Full list of changes compared with the original Tortillery: **[CAMBIOS.md](../to
 - 🌐 The printer is called **`tortilleryplus.local`** on the network: no need to look up its IP.
 - ⏱️ Accurate print time (Klipper Estimator).
 - 🛠️ **Your settings survive updates**: whatever you put in `config/ajustes/` overrides `printer.cfg`. How to do it:
-  **[Customising the printer](printer/README.md)**.
+  **[Customising the printer](printer/README.md)**, with [commented examples](../ejemplos/README.md).
 
 ## 📱 The screen
 
@@ -186,8 +186,11 @@ The eMMC image and the screen firmware are too large for GitHub and are on Terab
 3. **On the screen**: choose X4 Pro or X4 Plus and the language.
 4. **Welcome**: connect to WiFi, level the bed and press _Finish_.
 
-Mainsail is at **`http://tortilleryplus.local`** or `http://<printer IP>` (the IP is shown on the welcome screen and
-in _Settings_).
+To open Mainsail, type either of these in your browser:
+
+- **`http://tortilleryplus.local`**: the printer's name on your network, nothing to look up.
+- **`http://<printer IP>`**: the IP is shown on the welcome screen and in _Settings_. Use it if the name doesn't work
+  (some old Android phones and some company networks can't resolve it).
 
 > [!TIP]
 > Already running the original Tortillery? You can update without reflashing the eMMC: see
@@ -197,14 +200,44 @@ in _Settings_).
 
 - **From Mainsail**: _Machine › Update Manager › `tortillery`_. Updates configs, macros and KlipperLCD to the latest
   published version. Your calibration (PID, Z-offset, meshes, input shaper) is kept.
-- **By USB** (screen and board firmware): copy the `USB` folder from the download to a FAT32 stick and boot with it.
+- **By USB, without internet**: see [Updating by USB](#-updating-by-usb-without-internet).
+
+## 💾 Updating by USB (without internet)
+
+The **[`USB`](../USB)** folder in this repository is the latest version (currently **1.1.5 beta**), signed. Use it to
+update a printer that already runs Tortillery+ without internet: you only need your home network for step 4. (From the
+original Tortillery the same folder works, with the steps in [the installation guide](../tortillery_plus/README.md#pasar-de-la-tortillery-original-a-tortillery-sin-grabar-la-emmc), in Spanish.)
+
+1. Download the repository: green **Code › Download ZIP** button, then unzip it.
+2. Copy **everything inside** the `USB` folder to the root of a FAT32 stick (the contents, not the folder).
+   Optional: add `wifi.cfg` or `telegram.cfg` too ([examples](../ejemplos/usb)).
+3. With the printer off, plug in the stick and switch it on. It flashes the board and the screen by itself (only if
+   they changed) and the screen restarts. It takes a few minutes: don't switch it off.
+4. Install configs, macros and screen. Over SSH (`ssh mks@tortilleryplus.local` or `ssh mks@<IP>`):
+
+   ```bash
+   sudo bash ~/printer_data/gcodes/USB/tortillery_plus/install.sh PRO     # or PLUS
+   sudo reboot
+   ```
+
+   Your calibration (PID, Z-offset, meshes, input shaper) and the `ajustes` folder are kept.
+5. Remove the stick.
+
+> [!NOTE]
+> The printer checks the signature (`SHA256SUMS.sig`) before flashing anything: if a file was changed or the copy is
+> corrupt, it doesn't flash. It never updates while printing. What it did is logged in
+> `journalctl -u tortillery-update` and `/var/log/tortillery-update.log`.
 
 ## 💻 Connecting over SSH
 
 You don't need it to use the printer, but it's handy to read logs, restart services or install extras.
 
-1. Look up the printer's **IP** on the screen (_Settings_).
-2. Open a terminal (on Windows, PowerShell already includes `ssh`; [PuTTY](https://www.putty.org/) works too) and type:
+1. Open a terminal (on Windows, PowerShell already includes `ssh`; [PuTTY](https://www.putty.org/) works too).
+2. Connect by the printer's name or by its IP (shown on the screen, in _Settings_):
+
+   ```bash
+   ssh mks@tortilleryplus.local
+   ```
 
    ```bash
    ssh mks@<printer IP>
@@ -341,6 +374,8 @@ Something not working, or got an idea? Open an **[issue on GitHub](https://githu
 tortillery_plus/   Klipper configs, installer, scripts, AI, Telegram and services
 plr/               power-loss recovery and KlipperLCD (screen)
 printer/           guide to customising printer.cfg, moonraker.conf, the AI and Telegram
+ejemplos/          commented example files, Spanish and English (settings, AI, Telegram, Moonraker, camera, slicer)
+USB/               offline update stick (latest version, signed)
 Traducido/         this README and the customising guide in English
 assets/            README images
 ```

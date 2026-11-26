@@ -10,6 +10,9 @@
 
 ---
 
+> [!TIP]
+> In **[examples](../../ejemplos/README.md)** every file in this guide is commented (Spanish and English), ready to copy.
+
 All the files are in Mainsail › **Machine** (the `config` folder). Edit them right there: _Save & Restart_ applies the
 change.
 
@@ -57,6 +60,8 @@ before it, and updates never touch it.
    ```
 
 4. _Save & Restart_.
+
+There's a file with all these options commented in [`ejemplos/ajustes/mis_ajustes.cfg`](../../ejemplos/ajustes/mis_ajustes.cfg).
 
 To go back to stock, delete the line (or the file) and restart the firmware.
 

@@ -232,33 +232,6 @@ Añade `PURGE=0` si no quieres la línea de purga. La malla adaptativa necesita 
 las pone por defecto ("Label objects"); con Cura, Moonraker las añade solo si el archivo se **sube** por Mainsail o desde el
 laminador (no a los archivos copiados al USB). Sin etiquetas, mide la cama entera como antes.
 
-## Crear la imagen Tortillery+ para distribuir (todo desde la pantalla, sin USB ni SSH)
-*Solo para el autor: `build_release.py` y `build_image.sh` no están en el repo público; la imagen ya hecha está en Google
-Drive (enlace en el README).*
-
-**Desde el PC (recomendado):** con Ubuntu en WSL (`wsl --install -d Ubuntu` y `apt install qemu-user-binfmt`):
-```powershell
-python tortillery_plus/build_release.py
-wsl -d Ubuntu -u root -- bash tortillery_plus/build_image.sh
-python tortillery_plus/build_release.py
-```
-`build_image.sh` ejecuta el `install.sh` y el `tortillery-seal.sh` reales dentro de la imagen base (chroot ARM) y deja
-`build/Tortillery+_<versión>.img`, que `build_release.py` pone en `RELEASE/.../IMAGEN_EMMC`.
-
-**Desde una impresora:**
-1. En una impresora: "Pasar de la Tortillery original" con el USB del RELEASE (`install.sh` copia `klipper.bin` y `800_480.tft` a
-   `/opt/tortillery/firmware`).
-2. Sellarla: `sudo tortillery-seal.sh SELLAR`. Borra lo propio de esa impresora (claves SSH, machine-id, redes WiFi,
-   printer.cfg y MCU_ID.cfg con su calibración, historial, logs, gcodes) y la **apaga**.
-3. **Sin volver a encenderla**, saca la eMMC y cópiala a un archivo con un lector USB de eMMC
-   (Win32 Disk Imager: "Read"; o en Linux `sudo dd if=/dev/sdX of=Tortillery+.img bs=4M status=progress`).
-   Si se enciende antes, hace su primer arranque y hay que volver a sellarla.
-
-Quien grabe esa imagen solo tiene que encender la impresora:
-- **Primer arranque** (`tortillery-firstboot.service`, una sola vez): machine-id y claves SSH nuevas, graba la placa y la
-  pantalla con el firmware de la imagen y crea `MCU_ID.cfg` con su placa. Log: `/var/log/tortillery-firstboot.log`.
-- **En la pantalla**: elegir X4 Pro o X4 Plus (y el idioma) → bienvenida con WiFi y nivelación → Terminar.
-
 ## Actualizar desde Mainsail (repo de GitHub)
 `install.sh` clona el repo público (`REPO_URL` al principio de `install.sh`) en `~/tortillery` y añade
 `[update_manager tortillery]` (canal `stable`: solo versiones etiquetadas). En Mainsail > Máquina > Actualizar aparece

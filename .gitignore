@@ -4,12 +4,15 @@
 /*
 !/assets/
 !/.gitignore
+!/.gitattributes
 !/README.md
 !/docs/
 !/tortillery_plus/
 !/plr/
 !/printer/
 !/Traducido/
+!/USB/
+!/ejemplos/
 
 # herramientas y notas de desarrollo (no las usa la impresora)
 /tortillery_plus/screen/
@@ -26,3 +29,5 @@ __pycache__/
 *.tft
 *.img
 *.pem
+# USB de actualización sin internet (lo genera build_release.py, firmado)
+!/USB/800_480.tft

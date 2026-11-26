@@ -1,0 +1,6 @@
+[Unit]
+Description=Copia de seguridad de la config de Klipper (printer_data/backup y USB)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tortillery-backup.sh auto

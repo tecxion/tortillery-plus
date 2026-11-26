@@ -1,0 +1,24 @@
+# 99-custom-usb.rules
+# Reglas Udev personalizadas para el manejo de USB: WiFi, Tortillery y automontaje de G-codes
+
+# ====================================================================
+
+
+# 1. Manejar la conexion Wi-Fi desde USB (usb-wifi.sh)
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ENV{ID_FS_TYPE}=="vfat", \
+    RUN+="/bin/systemd-run --no-block /opt/usb-wifi/usb-wifi.sh /dev/%k"
+
+# 2. Manejar la activacion del servicio Tortillery (tortillery@.service)
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", TAG+="systemd", ENV{SYSTEMD_WANTS}="tortillery@%k.service"
+
+# 3. Manejar el montaje automatico de USBs para gcodes y el refresh de Moonraker
+# Monta el USB en /home/mks/printer_data/gcodes/USB (unico script que lo monta).
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ENV{ID_FS_TYPE}=="vfat|ext4|exfat", ENV{UDISKS_IGNORE}="1", \
+    RUN+="/bin/systemd-run --no-block /usr/local/bin/mount-usb.sh /dev/%k"
+
+# ====================================================================
+
+
+# 4. Manejar el desmontaje automatico de USBs para gcodes y el refresh de Moonraker
+ACTION=="remove", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", \
+    RUN+="/bin/systemd-run --no-block /usr/local/bin/usb-auto-unmount-refresh.sh %k"

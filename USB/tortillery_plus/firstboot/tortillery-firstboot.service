@@ -1,0 +1,14 @@
+[Unit]
+Description=Tortillery+ primer arranque (identidad, firmware, MCU_ID)
+After=local-fs.target systemd-udev-settle.service
+Before=ssh.service klipper.service KlipperLCD.service moonraker.service
+ConditionPathExists=!/var/lib/tortillery/firstboot.done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tortillery-firstboot.sh
+TimeoutStartSec=600
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

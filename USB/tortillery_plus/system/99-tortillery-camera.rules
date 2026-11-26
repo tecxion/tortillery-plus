@@ -1,0 +1,2 @@
+# Tortillery+: al enchufar una webcam (USB o USB-C, UVC) crowsnest pasa a usarla
+ACTION=="add", SUBSYSTEM=="video4linux", ENV{ID_V4L_CAPABILITIES}=="*:capture:*", ATTR{index}=="0", RUN+="/usr/bin/systemd-run --no-block /usr/local/bin/tortillery-camera.sh --restart"

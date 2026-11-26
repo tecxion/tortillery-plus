@@ -1,0 +1,7 @@
+[Unit]
+Description=Aplicar Tortillery+ (install.sh del repo actualizado)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tortillery-update.sh
+TimeoutStartSec=infinity

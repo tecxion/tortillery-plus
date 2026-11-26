@@ -1,0 +1,2 @@
+# El USB de actualización va tal cual (firma y scripts de Linux): sin conversión de fin de línea
+/USB/** -text

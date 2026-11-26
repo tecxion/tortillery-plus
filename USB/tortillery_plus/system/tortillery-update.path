@@ -1,0 +1,11 @@
+# Tortillery+: cuando Mainsail (update_manager) cambia la versión del repo ~/tortillery, aplica la nueva
+[Unit]
+Description=Aplicar Tortillery+ al actualizar desde Mainsail
+
+[Path]
+PathChanged=/home/mks/tortillery/.git/HEAD
+PathChanged=/home/mks/tortillery/.git/ORIG_HEAD
+PathChanged=/home/mks/tortillery/.git/refs/heads/main
+
+[Install]
+WantedBy=multi-user.target
