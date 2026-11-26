@@ -304,7 +304,7 @@ token: 123456:ABC...        # the one from @BotFather
 chat_id:                    # empty: detected automatically from the first message you send the bot
 ```
 
-It applies by itself in under a minute. One bot per printer. `telegram.conf` (next to it) is the message template: it
+It applies by itself in under a minute. One bot per printer. Step by step: [Telegram guide](../telegram/README.md). `telegram.conf` (next to it) is the message template: it
 is rewritten on update, don't edit it.
 
 ## 🎯 Saved calibrations (`tortillery_vars.cfg`)

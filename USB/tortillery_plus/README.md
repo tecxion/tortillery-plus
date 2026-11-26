@@ -99,11 +99,13 @@ Dos opciones, se pueden usar las dos:
 - **Obico autoalojado** (IA local gratis, en tu PC con Docker): alternativa sin proveedor de pago; ver su web.
 
 ## Telegram
-Pon el token de tu bot (de @BotFather) en `telegram.cfg` desde Mainsail; antes mándale un mensaje al bot. Llegan los
+Pon el token de tu bot (de @BotFather) en `telegram.cfg` desde Mainsail; antes mándale un mensaje al bot. Paso a paso,
+con el ID del chat y todas las órdenes: [guía de Telegram](../telegram/README.md). Llegan los
 avisos de inicio, cancelación y error; la **pausa** (la de la IA o cualquier otra) con foto y botones **Reanudar /
 Cancelar / Otra foto**; el **fin** con foto; el vídeo del **timelapse** si está instalado; y el aviso de
 **mantenimiento** (200 h) al terminar mientras toque. Al bot puedes
-escribirle `/foto`, `/estado`, `/reanudar` y `/cancelar` (solo obedece a tu chat). Utilidades > Más... > QR de Telegram
+escribirle `/foto`, `/estado`, `/reanudar`, `/cancelar`, `/enfriar`, `/continuar`, `/descartar` y `/ayuda` (salen en
+el menú **/** del bot; solo obedece a tu chat). Utilidades > Más... > QR de Telegram
 abre el bot en el móvil.
 
 **Sin filamento**: cuando el sensor se queda sin filamento la impresora se pausa (sube 20 mm) y **las temperaturas no

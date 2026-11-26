@@ -557,6 +557,19 @@ def estado_text():
     return '\n'.join(lines)
 
 
+# menú "/" del bot: bot_loop lo registra en Telegram (setMyCommands) al arrancar y si cambia el token
+COMMANDS = [('foto', 'Foto de la cámara y estado'), ('estado', 'Cómo va la impresión'),
+            ('reanudar', 'Reanudar la impresión en pausa'), ('cancelar', 'Cancelar la impresión'),
+            ('enfriar', 'Apagar la boquilla (en pausa, sin filamento)'),
+            ('continuar', 'Seguir la impresión tras un corte de luz'),
+            ('descartar', 'Descartar la impresión cortada por la luz'), ('ayuda', 'Lista de órdenes')]
+
+
+def set_commands(token):
+    http('https://api.telegram.org/bot%s/setMyCommands' % token,
+         {'commands': [{'command': c, 'description': d} for c, d in COMMANDS]}, timeout=15)
+
+
 def handle_update(u, chat):
     """Una actualización de Telegram. Solo obedece al chat configurado."""
     cb = u.get('callback_query')
@@ -617,7 +630,7 @@ def handle_update(u, chat):
         else:
             telegram('No hay nada que descartar', None)
     elif cmd in ('/start', '/ayuda', '/help'):
-        telegram('Órdenes: /foto /estado /reanudar /cancelar /enfriar', None)
+        telegram('Órdenes:' + ''.join('\n/%s  %s' % c for c in COMMANDS), None)
 
 
 # ---- corte de luz: la impresora no puede avisar sin corriente; avisa al volver (plr_state.json pendiente)
@@ -711,12 +724,18 @@ def power_loss_check(tries=60):
 
 def bot_loop():
     """Escucha a Telegram (long polling): botones del aviso y órdenes /foto /estado /reanudar /cancelar."""
-    offset = 0
+    offset, menu = 0, None
     while True:
         cred = tg_creds()
         if not cred:
             time.sleep(60)
             continue
+        if menu != cred[0]:
+            try:
+                set_commands(cred[0])
+                menu = cred[0]
+            except (urllib.error.URLError, OSError) as e:   # sin internet: se reintenta en la siguiente vuelta
+                log('Telegram menú de órdenes: %s' % e)
         try:
             r = json.loads(http('https://api.telegram.org/bot%s/getUpdates?timeout=50&offset=%d' % (cred[0], offset),
                                 timeout=65))

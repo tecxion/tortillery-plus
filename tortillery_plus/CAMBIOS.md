@@ -116,6 +116,11 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
     congelada y lo que se pulsaba después no llegaba a Klipper. Ahora van aparte y en orden.
   - **Tras un corte de luz no reanuda sin filamento (1.1.5)**: si el sensor no detecta filamento, _Continuar_ avisa en
     vez de imprimir al aire.
+  - **Corte de luz durante una pausa (1.1.5)**: la pausa sube la boquilla 20 mm y la recuperación no lo sabía: al
+    volver la luz reanudaba 20 mm por encima de la pieza, imprimiendo al aire. Ahora guarda la altura real también
+    en pausa.
+  - **Menú de órdenes en Telegram (1.1.5)**: el bot muestra sus órdenes en el menú **/** (la impresora las registra
+    al arrancar) y `/ayuda` las explica. Guía de Telegram en `telegram/README.md`.
   - **Nombre en la red (1.1.5)**: `http://tortilleryplus.local` (antes había que buscar la IP).
   - **Purga sin etiquetas de objetos (1.1.5)**: la de Artillery, 8 mm más adentro; en el borde se podía salir de la cama.
   - **Homing de X/Y fiable (1.1.5)**: a 20 mm/s y con la sensibilidad ajustada: ya no golpea el tope ni se para antes, y `PRUEBA_HOMING` baja de varios mm a 0,2 mm.

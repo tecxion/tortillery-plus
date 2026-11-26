@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-f1bf00)
 
-[Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md) · [Personalizar](printer/README.md) · [Ejemplos](ejemplos/README.md) · [🇬🇧 English](Traducido/README.md)
+[Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md) · [Personalizar](printer/README.md) · [Ejemplos](ejemplos/README.md) · [Telegram](telegram/README.md) · [🇬🇧 English](Traducido/README.md)
 
 </div>
 
@@ -98,9 +98,10 @@ La impresora te escribe por Telegram:
 - 🧵 **Sin filamento**: aviso con _Enfriar_, _Reanudar_ y _Cancelar_; en la pantalla cargas el nuevo y las temperaturas no bajan.
 - 🎬 Vídeo del timelapse y aviso de mantenimiento.
 
-Órdenes: `/foto`, `/estado`, `/reanudar`, `/cancelar`, `/enfriar`. Solo obedece a tu chat.
+Órdenes: `/foto`, `/estado`, `/reanudar`, `/cancelar`, `/enfriar`, `/continuar`, `/descartar` y `/ayuda`, también en
+el menú **/** del bot. Solo obedece a tu chat.
 
-Se configura en `telegram.cfg` desde Mainsail: [cómo hacerlo](tortillery_plus/README.md#telegram).
+**[Guía de Telegram](telegram/README.md)**: crear el bot, el token, el ID del chat y las órdenes.
 
 </td>
 </tr>
@@ -363,6 +364,7 @@ y cuenta:
 tortillery_plus/   configs de Klipper, instalador, scripts, IA, Telegram y servicios
 plr/               recuperación tras corte de luz y KlipperLCD (pantalla)
 printer/           guía para personalizar printer.cfg, moonraker.conf, la IA y Telegram
+telegram/          guía de Telegram: crear el bot, token, ID y órdenes
 ejemplos/          archivos de ejemplo comentados (ajustes, IA, Telegram, Moonraker, cámara, laminador)
 USB/               USB de actualización sin internet (última versión, firmada)
 Traducido/         este README y la guía de personalizar, en inglés

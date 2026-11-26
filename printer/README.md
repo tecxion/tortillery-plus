@@ -301,7 +301,7 @@ token: 123456:ABC...        # el de @BotFather
 chat_id:                    # vacío: se detecta solo con el primer mensaje que le mandes al bot
 ```
 
-Se aplica solo en menos de un minuto. Un bot por impresora. `telegram.conf` (al lado) es la plantilla de los mensajes:
+Se aplica solo en menos de un minuto. Un bot por impresora. Paso a paso: [guía de Telegram](../telegram/README.md). `telegram.conf` (al lado) es la plantilla de los mensajes:
 se reescribe al actualizar, no lo edites.
 
 ## 🎯 Calibraciones guardadas (`tortillery_vars.cfg`)

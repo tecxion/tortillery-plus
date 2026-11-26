@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Language](https://img.shields.io/badge/screen-English%20%7C%20Espa%C3%B1ol-f1bf00)
 
-[Download](#-download) · [Install](#-installation) · [SSH](#-connecting-over-ssh) · [FAQ](#-frequently-asked-questions) · [Troubleshooting](#-common-problems) · [Changes](../tortillery_plus/CAMBIOS.md) · [Full guide](../tortillery_plus/README.md) · [Customise](printer/README.md) · [Examples](../ejemplos/README.md) · [🇪🇸 Español](../README.md)
+[Download](#-download) · [Install](#-installation) · [SSH](#-connecting-over-ssh) · [FAQ](#-frequently-asked-questions) · [Troubleshooting](#-common-problems) · [Changes](../tortillery_plus/CAMBIOS.md) · [Full guide](../tortillery_plus/README.md) · [Customise](printer/README.md) · [Examples](../ejemplos/README.md) · [Telegram](telegram/README.md) · [🇪🇸 Español](../README.md)
 
 </div>
 
@@ -107,10 +107,10 @@ The printer messages you on Telegram (messages are in Spanish):
   the screen and temperatures stay up.
 - 🎬 Timelapse video and maintenance reminder.
 
-Commands: `/foto` (photo), `/estado` (status), `/reanudar` (resume), `/cancelar` (cancel), `/enfriar` (cool down). It
-only obeys your chat.
+Commands: `/foto` (photo), `/estado` (status), `/reanudar` (resume), `/cancelar` (cancel), `/enfriar` (cool down),
+`/continuar`, `/descartar` and `/ayuda` (help), also in the bot's **/** menu. It only obeys your chat.
 
-Set it up in `telegram.cfg` from Mainsail: [how](../tortillery_plus/README.md#telegram).
+**[Telegram guide](telegram/README.md)**: creating the bot, the token, the chat ID and the commands.
 
 </td>
 </tr>
@@ -374,6 +374,7 @@ Something not working, or got an idea? Open an **[issue on GitHub](https://githu
 tortillery_plus/   Klipper configs, installer, scripts, AI, Telegram and services
 plr/               power-loss recovery and KlipperLCD (screen)
 printer/           guide to customising printer.cfg, moonraker.conf, the AI and Telegram
+telegram/          Telegram guide (Spanish; English in Traducido/telegram)
 ejemplos/          commented example files, Spanish and English (settings, AI, Telegram, Moonraker, camera, slicer)
 USB/               offline update stick (latest version, signed)
 Traducido/         this README and the customising guide in English
