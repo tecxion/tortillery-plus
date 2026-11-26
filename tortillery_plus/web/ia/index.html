@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tortillery+ IA</title>
+<style>
+  :root { --bg: #16191f; --card: #232832; --txt: #eeeae2; --dim: #8c95a3; --acc: #f6b90e; --red: #c8102e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--txt); font: 16px/1.45 system-ui, sans-serif; }
+  header { padding: 14px 16px; border-bottom: 3px solid var(--acc); display: flex; gap: 12px; align-items: baseline;
+           flex-wrap: wrap; }
+  header h1 { font-size: 20px; margin: 0; }
+  header a { color: var(--dim); font-size: 14px; }
+  main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  p { margin: 6px 0; }
+  .dim { color: var(--dim); font-size: 14px; }
+  button { font: inherit; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: #333a47;
+           color: var(--txt); }
+  button.main { background: var(--acc); color: #16191f; font-weight: 600; }
+  button.danger { background: var(--red); }
+  button:disabled { opacity: .45; cursor: default; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .steps { display: flex; gap: 6px; margin: 8px 0; }
+  .steps span { flex: 1; height: 6px; border-radius: 3px; background: #333a47; }
+  .steps span.done { background: var(--acc); }
+  .steps span.now { background: var(--txt); }
+  .marks { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+  .marks button { padding: 6px 10px; font-size: 14px; border: 2px solid transparent; }
+  .marks button.sel { border-color: var(--acc); }
+  .marks button.ok::after { content: " ✓"; color: var(--acc); }
+  canvas { width: 100%; display: block; background: #0d0f13; border-radius: 8px; touch-action: none; }
+  input { font: inherit; width: 80px; padding: 6px; border-radius: 6px; border: 1px solid #444; background: #0d0f13;
+          color: var(--txt); }
+  #msg { min-height: 1.4em; color: var(--acc); }
+  #msg.err { color: #ff6b6b; }
+</style>
+</head>
+<body>
+<header><h1>Tortillery+ · marcar la cámara para la IA</h1><a href="/">Volver a Mainsail</a></header>
+<main>
+  <div class="card">
+    <p>La IA vigila mejor si solo mira la pieza, ampliada. Pero la cama y el cabezal se mueven, y cada cámara está
+       en un sitio. Aquí la impresora se coloca en <b>4 posiciones</b>, hace una foto en cada una y tú marcas la
+       <b>punta de la boquilla</b> y las <b>4 esquinas de la cama</b>. Con eso sabe dónde está cada pieza en la foto en
+       todo momento, sin gastar consultas en buscarla.</p>
+    <p class="dim">Hazlo con la cama vacía y sin imprimir. Si mueves la cámara, vuelve a marcar. «Delante» es el lado
+       de la pantalla de la impresora. Puedes poner una esquina fuera de la foto si no se ve.</p>
+    <p id="saved" class="dim"></p>
+    <div class="row">
+      <label>Cama (mm): <input id="bw" type="number" min="100" max="400" value="240"> × <input id="bd"
+             type="number" min="100" max="400" value="250"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <p id="what"></p>
+    <div class="row">
+      <button class="main" id="go">Mover y hacer foto</button>
+      <button id="back" disabled>Foto anterior</button>
+      <button id="next" disabled>Siguiente foto</button>
+      <button class="main" id="save" hidden>Guardar marcas</button>
+    </div>
+    <p id="msg"></p>
+    <div class="marks" id="marks"></div>
+    <canvas id="cv" width="900" height="600"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="danger" id="del">Borrar las marcas guardadas</button>
+      <span class="dim">La IA vuelve a buscar la cama ella sola (una consulta más por impresión).</span>
+    </div>
+  </div>
+</main>
+<script>
+"use strict";
+const FILE = "ia_marcas.json";
+const NAMES = ["Boquilla (punta)", "Delante izquierda", "Delante derecha", "Detrás derecha", "Detrás izquierda"];
+const COLORS = ["#f6b90e", "#4fc3f7", "#4fc3f7", "#4fc3f7", "#4fc3f7"];
+const STEPS = ["base: boquilla a 5 mm de la cama", "cabezal movido en X", "cama movida en Y", "cabezal subido en Z"];
+const PAD = 0.2;   // margen alrededor de la foto para poder marcar esquinas que no se ven
+const $ = (id) => document.getElementById(id);
+let step = 0, sel = 0, limits = null;
+const shots = [null, null, null, null];   // {pos, img, marks: [[u, v] | null x5]}
+
+function msg(t, err) { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; }
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error((await r.text()).slice(0, 200) || r.status);
+  return r.json();
+}
+const gcode = (script) => api("/printer/gcode/script?script=" + encodeURIComponent(script), { method: "POST" });
+
+function positions() {
+  const w = +$("bw").value, d = +$("bd").value, mx = limits.axis_maximum;
+  const c = (v, m) => Math.round(Math.min(v, m - 5));
+  const x0 = c(w * 0.3, mx[0]), y0 = c(d * 0.3, mx[1]);
+  return [[x0, y0, 5], [c(w * 0.7, mx[0]), y0, 5], [x0, c(d * 0.7, mx[1]), 5], [x0, y0, c(80, mx[2])]];
+}
+
+async function init() {
+  try {
+    const st = (await api("/printer/objects/query?toolhead=axis_maximum,homed_axes")).result.status;
+    limits = st.toolhead;
+    const plus = limits.axis_maximum[0] > 280;   // X4 Plus: 310; X4 Pro: 255
+    $("bw").value = plus ? 300 : 240; $("bd").value = plus ? 300 : 250;
+  } catch (e) { msg("Sin conexión con la impresora: " + e.message, true); }
+  try {
+    const old = await api("/server/files/config/" + FILE + "?t=" + Date.now());
+    $("saved").textContent = "Ya hay marcas guardadas: la IA las está usando. Puedes volver a marcar.";
+    $("bw").value = old.cama_mm[0]; $("bd").value = old.cama_mm[1];
+  } catch (e) { $("saved").textContent = "Aún no hay marcas: la IA busca la cama ella sola."; }
+  render();
+}
+
+async function shoot() {
+  msg("Comprobando la impresora...");
+  $("go").disabled = true;
+  try {
+    const st = (await api("/printer/objects/query?print_stats=state&toolhead=homed_axes")).result.status;
+    if (["printing", "paused"].includes(st.print_stats.state)) throw new Error("está imprimiendo");
+    const p = positions()[step];
+    msg("Moviendo la impresora...");
+    await gcode((st.toolhead.homed_axes === "xyz" ? "" : "G28\n") +
+                `G90\nG1 Z10 F600\nG1 X${p[0]} Y${p[1]} F6000\nG1 Z${p[2]} F600\nM400\n_LUZ_FOTO\nG4 P1500`);
+    msg("Haciendo la foto...");
+    const img = new Image();
+    await new Promise((ok, ko) => { img.onload = ok; img.onerror = () => ko(new Error("no hay foto de la cámara"));
+                                     img.src = "/webcam/?action=snapshot&t=" + Date.now(); });
+    gcode("_LUZ_LED_APLICAR").catch(() => {});
+    const prev = shots[step] || shots[step - 1];
+    shots[step] = { pos: p, img, marks: prev ? prev.marks.map((m) => m && m.slice()) : [null, null, null, null, null] };
+    shots[step].fresh = !!prev;   // marcas copiadas de la foto anterior: hay que moverlas a su sitio
+    sel = 0;
+    msg(prev ? "Arrastra cada marca a su sitio en esta foto (empezando por la boquilla)." :
+               "Toca la punta de la boquilla y luego las 4 esquinas de la cama, en orden.");
+  } catch (e) { msg("No se pudo: " + e.message, true); }
+  $("go").disabled = false;
+  render();
+}
+
+// ---- lienzo: la foto con un margen alrededor; las marcas van en % de la foto (pueden salirse de 0-100)
+const cv = $("cv"), ctx = cv.getContext("2d");
+function geom() {
+  const s = shots[step], iw = s ? s.img.naturalWidth : 4, ih = s ? s.img.naturalHeight : 3;
+  const W = cv.clientWidth || 900, k = W / (iw * (1 + 2 * PAD));
+  return { k, ox: iw * PAD * k, oy: ih * PAD * k, w: iw * k, h: ih * k, H: ih * (1 + 2 * PAD) * k, W };
+}
+const toPx = (g, m) => [g.ox + m[0] / 100 * g.w, g.oy + m[1] / 100 * g.h];
+function toPct(g, e) {
+  const r = cv.getBoundingClientRect();
+  return [((e.clientX - r.left) - g.ox) / g.w * 100, ((e.clientY - r.top) - g.oy) / g.h * 100];
+}
+
+function draw() {
+  const g = geom(), dpr = window.devicePixelRatio || 1;
+  cv.width = g.W * dpr; cv.height = g.H * dpr; cv.style.height = g.H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = "#0d0f13"; ctx.fillRect(0, 0, g.W, g.H);
+  const s = shots[step];
+  if (!s) {
+    ctx.fillStyle = "#8c95a3"; ctx.font = "16px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("Pulsa «Mover y hacer foto»", g.W / 2, g.H / 2);
+    return;
+  }
+  ctx.drawImage(s.img, g.ox, g.oy, g.w, g.h);
+  const c = s.marks.slice(1);
+  if (c.every(Boolean)) {   // la cama
+    ctx.strokeStyle = "#4fc3f7"; ctx.lineWidth = 2; ctx.beginPath();
+    c.forEach((m, i) => { const [x, y] = toPx(g, m); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.closePath(); ctx.stroke();
+  }
+  s.marks.forEach((m, i) => {
+    if (!m) return;
+    const [x, y] = toPx(g, m);
+    ctx.fillStyle = COLORS[i]; ctx.strokeStyle = i === sel ? "#fff" : "#000"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, i === sel ? 9 : 7, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.font = "bold 13px system-ui"; ctx.textAlign = "left"; ctx.lineWidth = 3; ctx.strokeStyle = "#000";
+    const t = i ? String(i) : "B";
+    ctx.strokeText(t, x + 10, y - 8); ctx.fillStyle = "#fff"; ctx.fillText(t, x + 10, y - 8);
+  });
+}
+
+let drag = -1;
+cv.addEventListener("pointerdown", (e) => {
+  const s = shots[step]; if (!s) return;
+  const g = geom(), p = toPct(g, e);
+  const near = s.marks.findIndex((m) => m && Math.hypot(...toPx(g, m).map((v, i) => v - toPx(g, p)[i])) < 22);
+  if (near >= 0) { drag = sel = near; } else {
+    s.marks[sel] = p; drag = sel;
+    if (!s.fresh) { const n = s.marks.findIndex((m) => !m); if (n >= 0) sel = n; }
+  }
+  cv.setPointerCapture(e.pointerId); render();
+});
+cv.addEventListener("pointermove", (e) => {
+  if (drag < 0) return;
+  shots[step].marks[drag] = toPct(geom(), e); draw();
+});
+cv.addEventListener("pointerup", () => { drag = -1; render(); });
+window.addEventListener("resize", draw);
+
+function render() {
+  $("steps").innerHTML = STEPS.map((_, i) =>
+    `<span class="${i < step || (i === step && complete(i)) ? "done" : i === step ? "now" : ""}"></span>`).join("");
+  $("what").innerHTML = `<b>Foto ${step + 1} de 4</b> · ${STEPS[step]}`;
+  const s = shots[step];
+  $("marks").innerHTML = s ? NAMES.map((n, i) =>
+    `<button data-i="${i}" class="${i === sel ? "sel" : ""} ${s.marks[i] ? "ok" : ""}">${i ? i + ". " : ""}${n}</button>`
+  ).join("") : "";
+  $("marks").querySelectorAll("button").forEach((b) => b.onclick = () => { sel = +b.dataset.i; render(); });
+  $("back").disabled = step === 0;
+  $("next").disabled = !(step < 3 && complete(step));
+  $("save").hidden = !(step === 3 && complete(3));
+  draw();
+}
+const complete = (i) => shots[i] && shots[i].marks.every(Boolean);
+
+$("go").onclick = shoot;
+$("back").onclick = () => { step--; sel = 0; msg(""); render(); };
+$("next").onclick = () => { step++; sel = 0; msg(shots[step] ? "" : "Pulsa «Mover y hacer foto»."); render(); };
+$("save").onclick = async () => {
+  const r = (v) => Math.round(v * 100) / 100;
+  const data = { cama_mm: [+$("bw").value, +$("bd").value],
+                 fotos: shots.map((s) => ({ pos: s.pos, boquilla: s.marks[0].map(r),
+                                            cama: s.marks.slice(1).map((m) => m.map(r)) })) };
+  const fd = new FormData();
+  fd.append("root", "config");
+  fd.append("file", new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), FILE);
+  try {
+    await api("/server/files/upload", { method: "POST", body: fd });
+    msg("Guardado. La IA lo usa desde la próxima foto.");
+    $("saved").textContent = "Marcas guardadas: la IA las está usando.";
+  } catch (e) { msg("No se pudo guardar: " + e.message, true); }
+};
+$("del").onclick = async () => {
+  if (!confirm("¿Borrar las marcas? La IA volverá a buscar la cama ella sola.")) return;
+  try {
+    await api("/server/files/config/" + FILE, { method: "DELETE" });
+    $("saved").textContent = "Marcas borradas: la IA busca la cama ella sola.";
+    msg("");
+  } catch (e) { msg("No se pudo borrar: " + e.message, true); }
+};
+init();
+</script>
+</body>
+</html>

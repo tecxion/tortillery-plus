@@ -139,6 +139,7 @@ class LCDEvents():
     CALIB          = 66   # Tortillery+ 2.0: (acción, dato) de las páginas de calibración
     AI_PAGE        = 67   # página Vigilancia IA
     TELEGRAM_QR    = 68   # QR del bot de Telegram
+    RUNOUT_PARK    = 69   # sin filamento, Aceptar: cabezal a la izquierda para cargar
     SETUP_DONE     = 65   # asistente: Terminar   # ('abrir'|'elegir'|'cargar'|'guardar'|'borrar', fila)
 
     
@@ -565,7 +566,9 @@ class LCD:
                     self.write("page main")
                     self.is_thumbnail_written = False
                 elif (data.state == "complete"):
-                    self.write("page printfinish")
+                    # patrón de pressure advance terminado: directamente a elegir la línea
+                    self.write("page pa_pick" if str(data.file_name).endswith('tortillery_pa.gcode')
+                               else "page printfinish")
                     self.is_thumbnail_written = False
 
         if data != self.printer:
@@ -680,7 +683,8 @@ class LCD:
             self.callback(self.evt.CALIB, ('shaper_save', None))
         elif 0x82 <= code <= 0x85:   # patrón de pressure advance con PLA/ABS/PETG/TPU
             m = code - 0x82
-            self.callback(self.evt.CALIB, ('pa_print', (self.preset_temp[m], self.preset_bed_temp[m])))
+            self.callback(self.evt.CALIB, ('pa_print', (self.preset_temp[m], self.preset_bed_temp[m],
+                                                        ('pla', 'abs', 'petg', 'tpu')[m])))
         elif code == 0x86:
             self.callback(self.evt.CALIB, ('pa_save', self.read_variable('pa_pick.n.val')))
         elif 0x88 <= code <= 0x8B:   # extrusor: calentar y empujar 100 mm
@@ -694,6 +698,15 @@ class LCD:
             self.callback(self.evt.AI_PAGE)
         elif code == 0x95:
             self.callback(self.evt.TELEGRAM_QR)
+        elif code == 0xA0:   # sin filamento: Aceptar
+            self.callback(self.evt.RUNOUT_PARK)
+        elif 0xA1 <= code <= 0xA6:   # página cargar: sacar (A1-A3) o meter (A4-A6) 10/50/100 mm
+            mm = (10, 50, 100)[(code - 0xA1) % 3]
+            self.callback(self.evt.MOVE_E, [-mm if code <= 0xA3 else mm, self.feedrate_e])
+        elif code == 0xA7:   # página cargar: Reanudar
+            if self.printer.state in ('paused', 'pausing'):
+                self.callback(self.evt.PRINT_RESUME)
+            self.write("page printpause")
         elif 0x50 <= code <= 0x55:
             self.callback(self.evt.NEOPIXEL, ('color', code - 0x50))
         elif code == 0x56:   # color a medida (página led_rgb, valores 0-100)

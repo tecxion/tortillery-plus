@@ -111,6 +111,8 @@ class PLR:
             'absolute_coordinates': gm['absolute_coordinates'],
             'absolute_extrude': gm['absolute_extrude'],
             'extruder_temp': self.extruder.get_status(eventtime)['target'],
+            # PRINT_START MATERIAL=... pone el PA del material (no el de arranque)
+            'pressure_advance': self.extruder.get_status(eventtime)['pressure_advance'],
             'bed_temp': (self.bed.get_status(eventtime)['target']
                          if self.bed is not None else 0.),
             'fan': (self.fan.get_status(eventtime)['speed']

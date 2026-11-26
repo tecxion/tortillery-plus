@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-f1bf00)
 
-[Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md)
+[Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md) · [Personalizar](printer/README.md) · [🇬🇧 English](Traducido/README.md)
 
 </div>
 
@@ -22,18 +22,53 @@ editar archivos y conservando tu calibración en cada actualización.
 
 ## ✨ Qué trae
 
-|                           |                                                                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 🖥️ **Pantalla nueva**     | WiFi desde la pantalla, explorador por carpetas con USB, tiempo restante real, errores en español y calibración guiada. |
-| 🎯 **Calibración guiada** | Input shaper con aceleración máxima, pressure advance, extrusor y torsión del eje X, todo desde la pantalla.            |
-| ⚡ **Corte de luz**       | Guarda el estado cada 5 s y al volver ofrece reanudar la impresión.                                                     |
-| 📷 **Cámara automática**  | Cualquier webcam USB aparece en Mainsail sin configurar nada.                                                           |
-| 🤖 **Vigilancia con IA**  | Detecta espagueti, piezas despegadas y atascos; pausa y te avisa con foto (Anthropic, OpenAI, Google, NVIDIA u Ollama). |
-| 💬 **Telegram**           | Inicio, pausa con botones, fin con foto, vídeo del timelapse y aviso de mantenimiento. `/foto`, `/estado`, `/reanudar`. |
-| 🔄 **Actualizaciones**    | Desde Mainsail con un clic (solo versiones estables, nunca imprimiendo) y USB firmado para pantalla y placa.            |
-| 🛡️ **Más segura**         | Apagado de calentadores en pausas largas, detección de termistor suelto, watchdog y copias automáticas de la config.    |
+|                           |                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 🖥️ **Pantalla nueva**     | WiFi desde la pantalla, explorador por carpetas con USB, tiempo restante real, errores en español y calibración guiada.   |
+| 🎯 **Calibración guiada** | Input shaper con aceleración máxima, pressure advance por material, extrusor, torsión del eje X y escuadra X/Y.           |
+| ⚡ **Corte de luz**       | Guarda el estado cada 5 s y al volver ofrece reanudar la impresión.                                                       |
+| 📷 **Cámara automática**  | Cualquier webcam USB aparece en Mainsail sin configurar nada.                                                             |
+| 🤖 **Vigilancia con IA**  | Detecta espagueti, piezas despegadas, atascos, bolas en la boquilla y capas desplazadas; pausa, avisa con foto y lo ves marcado en Mainsail. |
+| 💬 **Telegram**           | Inicio, pausa con botones, fin con foto, vídeo del timelapse y aviso de mantenimiento. `/foto`, `/estado`, `/reanudar`.   |
+| 🔄 **Actualizaciones**    | Desde Mainsail con un clic (solo versiones estables, nunca imprimiendo) y USB firmado para pantalla y placa.              |
+| 🛡️ **Más segura**         | Apagado de calentadores en pausas largas, detección de termistor suelto, watchdog y copias automáticas de la config.      |
 
 Lista completa de cambios respecto a la Tortillery original: **[CAMBIOS.md](tortillery_plus/CAMBIOS.md)**.
+
+## 🆕 Novedades de la 1.1.5 (beta)
+
+**Pantalla e impresión**
+- 🛑 **Parada de emergencia** en la pantalla de impresión: botón rojo arriba a la izquierda, con confirmación.
+- 🧵 **Sin filamento**: antes la impresora se paraba sin decir nada, con el cabezal encima de la pieza. Ahora avisa en
+  la pantalla y en Telegram. _Aceptar_ aparta el cabezal a la izquierda (la cama no se mueve, no se pierde la posición) y
+  abre _Cargar filamento_: Sacar y Meter 10, 50 o 100 mm y _Reanudar_. Las temperaturas no bajan solas en esa pausa;
+  solo se apaga la boquilla si pulsas _Enfriar_ en Telegram. No reanuda si el sensor sigue sin filamento.
+- 🔁 **Cambio de filamento (M600)**: abre la misma página _Cargar filamento_, a la temperatura de la impresión (antes
+  calentaba a la del material elegido).
+- 🚫 **No empieza sin filamento**: con el sensor activo y sin filamento, `PRINT_START` se para con un aviso.
+- 📏 **Purga dentro de la cama**: los patrones de calibración purgan delante del patrón, y las impresiones sin etiquetas
+  de objetos purgan 8 mm más adentro que la línea de Artillery (en el borde se podía salir).
+- 🏠 **Homing de X/Y fiable**: a 20 mm/s y con la sensibilidad ajustada. `PRUEBA_HOMING` y `FIJAR_HOMING` lo dejan
+  exacto para la recuperación tras un corte de luz.
+
+**Calibración**
+- Input shaper medido de 5 a 135 Hz (antes cortaba en 70 Hz y la resonancia de X de la X4 está en unos 100 Hz).
+- Pressure advance por material: `PRINT_START MATERIAL=...` aplica el de PLA, PETG, ABS/ASA o TPU.
+- Escuadra de X/Y con `CALIBRAR_ESCUADRA`.
+- Al acabar un patrón, el cabezal se aparta y la cama sale adelante.
+
+**IA y cámara**
+- 📐 **Marca tu cámara** en `http://tortilleryplus.local/ia`: desde ahí la IA mira solo la pieza aunque se muevan la
+  cama y el cabezal.
+- Detecta también bolas en la boquilla y capas desplazadas, y mira la pieza de cerca.
+- Si la foto sale oscura, enciende la luz del cabezal para hacerla.
+- Cámara **ia** en Mainsail con lo último que ha revisado.
+
+**Sistema**
+- 🌐 La impresora se llama **`tortilleryplus.local`** en la red: ya no hace falta buscar la IP.
+- ⏱️ Tiempo de impresión exacto (Klipper Estimator).
+- 🛠️ **Tus ajustes no se pierden al actualizar**: lo que pongas en `config/ajustes/` gana sobre `printer.cfg`. Cómo
+  hacerlo, en **[Personalizar la impresora](printer/README.md)**.
 
 ## 📱 La pantalla
 
@@ -60,9 +95,10 @@ La impresora te escribe por Telegram:
 - ✅ **Fin con foto** y el tiempo que ha tardado.
 - ⚡ **Corte de luz**: al volver la corriente te dice cuándo se fue, por dónde iba y te deja _Continuar_ o _Descartar_.
 - 🤖 Si la IA ve un fallo, pausa y te manda la foto.
+- 🧵 **Sin filamento**: aviso con _Enfriar_, _Reanudar_ y _Cancelar_; en la pantalla cargas el nuevo y las temperaturas no bajan.
 - 🎬 Vídeo del timelapse y aviso de mantenimiento.
 
-Órdenes: `/foto`, `/estado`, `/reanudar`, `/cancelar`. Solo obedece a tu chat.
+Órdenes: `/foto`, `/estado`, `/reanudar`, `/cancelar`, `/enfriar`. Solo obedece a tu chat.
 
 Se configura en `telegram.cfg` desde Mainsail: [cómo hacerlo](tortillery_plus/README.md#telegram).
 
@@ -76,8 +112,13 @@ Cada minuto (o lo que elijas) la IA mira la foto de la cámara. Si ve un fallo, 
 
 - Al empezar cada impresión busca la cama en la foto y solo mira esa zona, ampliada: vale **cualquier posición de la
   cámara**.
+- **Marca tu cámara** en `http://tortilleryplus.local/ia`: la impresora se pone en 4 posiciones, haces una foto en
+  cada una y tocas la boquilla y las esquinas de la cama. Desde ahí la IA mira solo la pieza, ampliada, aunque la cama
+  y el cabezal se muevan, y sin gastar consultas en buscarla. Vale con la cámara en el marco, en la cama o en el cabezal.
 - Compara cada foto con otra de hace unos minutos, así nota una pieza que se ha movido o un espagueti que crece.
 - Antes de pausar puede pedir confirmación a un segundo modelo.
+- **Lo ves en vivo en Mainsail**: la cámara **ia** enseña la última foto revisada con la pieza (verde), el fallo (rojo)
+  y el veredicto.
 - Proveedores: Anthropic, OpenAI, Google, NVIDIA, Ollama (en tu PC, gratis) o cualquiera compatible con OpenAI.
 
 Ejemplo real con una foto de espagueti (`tortillery-ai.py --test foto.jpg`):
@@ -107,9 +148,13 @@ Se configura en `tortillery_ai.cfg` desde Mainsail: [cómo hacerlo](tortillery_p
 
 ## 📦 Descarga
 
-La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y están en Google Drive:
+La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y están en Terabox:
 
 > **[⬇️ Descargar Tortillery+ (Terabox)](https://1024terabox.com/s/1VxnkAWIMICElKzex2T21og)**
+
+**Versión actual: 1.1.4.** La imagen trae Klipper 0.14.0, Moonraker 0.11.0 y Mainsail 2.19.0. Descarga la carpeta
+`Tortillery+_1.1.4`: dentro está la imagen (`IMAGEN_EMMC`) y la carpeta `USB`. Lo nuevo de cada versión, en
+[Novedades](tortillery_plus/CAMBIOS.md).
 
 ## 🧰 Qué necesitas
 
@@ -129,7 +174,8 @@ La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y 
 3. **En la pantalla**: elige X4 Pro o X4 Plus y el idioma.
 4. **Bienvenida**: conecta el WiFi, nivela la cama y pulsa _Terminar_.
 
-Mainsail queda en `http://<IP de la impresora>` (la IP aparece en la bienvenida y en _Ajustes_).
+Mainsail queda en **`http://tortilleryplus.local`** o en `http://<IP de la impresora>` (la IP aparece en la bienvenida y
+en _Ajustes_).
 
 > [!TIP]
 > ¿Ya tienes la Tortillery original? Puedes actualizar sin volver a grabar la eMMC: mira
@@ -194,8 +240,10 @@ bash ~/tortillery/tortillery_plus/extras.sh mobileraker       # avisos push en e
 <details>
 <summary><b>¿Pierdo la calibración al actualizar?</b></summary>
 
-No. El instalador conserva el bloque `SAVE_CONFIG` de `printer.cfg` (PID, Z-offset, mallas, input shaper) y guarda una
-copia `.orig` de cada archivo que reemplaza. Además, cada cambio de `printer.cfg` se copia solo en
+No. El instalador conserva el bloque `SAVE_CONFIG` de `printer.cfg` (PID, Z-offset, mallas, input shaper),
+`tortillery_vars.cfg` (pressure advance, aceleración, extrusor) y guarda una copia `.orig` de cada archivo que
+reemplaza. Los cambios que hagas a mano en `printer.cfg` **sí se pierden**: ponlos en `config/ajustes/`
+([cómo](printer/README.md)). Además, cada cambio de `printer.cfg` se copia solo en
 `printer_data/backup` (y en el USB si está puesto).
 
 </details>
@@ -233,7 +281,8 @@ Mainsail.
 <details>
 <summary><b>¿Qué versión tengo?</b></summary>
 
-En la pantalla: _Ajustes › Información_. En Mainsail: _Máquina › Actualizar › `tortillery`_.
+En la pantalla: _Ajustes › Información_. En Mainsail: _Máquina › Actualizar › `tortillery`_. Si es anterior a la 1.1.4,
+actualiza desde Mainsail (pulsa ↻ si aún no la ve).
 
 </details>
 
@@ -242,18 +291,20 @@ En la pantalla: _Ajustes › Información_. En Mainsail: _Máquina › Actualiza
 > [!WARNING]
 > Muchas de las pantallas cogeladas las he solucionado apagando y encendiendo de nuevo.
 
-| Lo que ves                                     | Qué hacer                                                                                                                                                                                                                 |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| La pantalla no responde o se queda en el logo  | Espera al primer arranque (varios minutos). Si sigue igual, en SSH: `sudo systemctl restart KlipperLCD`. Si no, vuelve a pasar la carpeta `USB` de la descarga.                                                           |
-| Error de Klipper en la pantalla                | La pantalla dice el motivo en español; pulsa _Reiniciar firmware_. El detalle está en Mainsail › _Máquina_ › `klippy.log`.                                                                                                |
-| Mainsail muestra `tortillery` como **INVALID** | Pasa en impresoras con la 1.0.1. En SSH: `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`). Desde la 1.1.0 ya no ocurre.                                                                                 |
-| Telegram: `409 Conflict` en el log             | Otro programa usa el mismo bot (otra impresora, otro script). Usa un bot por impresora.                                                                                                                                   |
-| La IA no detecta fallos                        | Prueba con `python3 /usr/local/bin/tortillery-ai.py --test` y mira `config/ia_prueba.jpg`: si la cama no se ve, mueve la cámara o pon `recorte:` a mano en `tortillery_ai.cfg`. El log: `journalctl -u tortillery-ai -f`. |
-| La IA pausa sin motivo                         | Sube `umbral:` o `confirmaciones:` en `tortillery_ai.cfg`, o pon un `modelo_confirmar:`.                                                                                                                                  |
-| No aparece el USB                              | Formatea el pendrive en FAT32 (o ext4). Sale en Mainsail y en la pantalla dentro de la carpeta `USB`.                                                                                                                     |
+| Lo que ves                                                  | Qué hacer                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| La pantalla no responde o se queda en el logo               | Espera al primer arranque (varios minutos). Si sigue igual, en SSH: `sudo systemctl restart KlipperLCD`. Si no, vuelve a pasar la carpeta `USB` de la descarga.                                                                                |
+| Error de Klipper en la pantalla                             | La pantalla dice el motivo en español; pulsa _Reiniciar firmware_. El detalle está en Mainsail › _Máquina_ › `klippy.log`.                                                                                                                     |
+| Mainsail muestra `tortillery` como **INVALID**              | Pasa en impresoras con la 1.0.1. En SSH: `sudo bash ~/tortillery/tortillery_plus/install.sh PRO` (o `PLUS`). Desde la 1.1.0 ya no ocurre.                                                                                                      |
+| Telegram: `409 Conflict` en el log                          | Otro programa usa el mismo bot (otra impresora, otro script). Usa un bot por impresora.                                                                                                                                                        |
+| La IA no detecta fallos                                     | Prueba con `python3 /usr/local/bin/tortillery-ai.py --test` y mira `config/ia_prueba.jpg`: si la cama no se ve, mueve la cámara o pon `recorte:` a mano en `tortillery_ai.cfg`. El log: `journalctl -u tortillery-ai -f`.                      |
+| La IA pausa sin motivo                                      | Sube `umbral:` o `confirmaciones:` en `tortillery_ai.cfg`, o pon un `modelo_confirmar:`.                                                                                                                                                       |
+| No aparece el USB                                           | Formatea el pendrive en FAT32 (o ext4). Sale en Mainsail y en la pantalla dentro de la carpeta `USB`.                                                                                                                                          |
 | Al reanudar tras un corte, la pieza sigue desplazada en X/Y | Es el homing sin finales de carrera. En la consola de Mainsail: `PRUEBA_HOMING` y, si varía 0,30 mm o menos, `FIJAR_HOMING`. [Más detalles](tortillery_plus/README.md#homing-exacto-de-xy-recomendado-para-la-recuperación-tras-corte-de-luz). |
-| WiFi: contraseña mal escrita                   | Vuelve a conectar desde _Ajustes › WiFi_; las demás redes guardadas no se borran.                                                                                                                                         |
-| La actualización desde Mainsail no se instala  | Solo se instalan versiones firmadas y nunca imprimiendo. Mira `journalctl -u tortillery-update`.                                                                                                                          |
+| El homing golpea el tope, suena a dientes saltando o se para antes de llegar | Sensibilidad del homing mal ajustada para tu impresora. [Guía para ajustarla](tortillery_plus/README.md#homing-exacto-de-xy-recomendado-para-la-recuperación-tras-corte-de-luz). |
+| No empieza a imprimir: "Sin filamento"                      | El sensor no detecta filamento. Carga filamento o apaga el sensor para esa impresión: `SET_FILAMENT_SENSOR SENSOR=fila ENABLE=0`. |
+| WiFi: contraseña mal escrita                                | Vuelve a conectar desde _Ajustes › WiFi_; las demás redes guardadas no se borran.                                                                                                                                                              |
+| La actualización desde Mainsail no se instala               | Solo se instalan versiones firmadas y nunca imprimiendo. Mira `journalctl -u tortillery-update`.                                                                                                                                               |
 
 ## 🆘 Ayuda y contacto
 
@@ -267,11 +318,19 @@ y cuenta:
 > [!WARNING]
 > Antes de pegar un log o un archivo de config, **borra tus claves**: el token de Telegram y las API keys de la IA.
 
+### 🎮 Tambien en Discord
+
+- Si usáis discord también podeis poner vuestras dudas ahí he creado en mi canal un foro relacionado con Tortillery +.
+
+[DISCORD](https://discord.gg/QAbVYzxPKk)
+
 ## 📁 Qué hay en este repositorio
 
 ```
 tortillery_plus/   configs de Klipper, instalador, scripts, IA, Telegram y servicios
 plr/               recuperación tras corte de luz y KlipperLCD (pantalla)
+printer/           guía para personalizar printer.cfg, moonraker.conf, la IA y Telegram
+Traducido/         este README y la guía de personalizar, en inglés
 assets/              imágenes del README
 ```
 

@@ -393,7 +393,8 @@ class KlipperLCD ():
                 self.printer.sendGCode('SAVE_VARIABLE VARIABLE=max_accel VALUE=%d' % acc)
             self.printer.sendGCode('SAVE_CONFIG')
         elif action == 'pa_print':
-            nozzle, bed = data
+            nozzle, bed = data[:2]
+            self.pa_material = data[2] if len(data) > 2 else None   # pa_save guarda también el de ese material
             name = 'tortillery_pa.gcode'
             path = os.path.join(self.printer.file_path or os.path.expanduser('~/printer_data/gcodes'), name)
             try:
@@ -406,9 +407,12 @@ class KlipperLCD ():
         elif action == 'pa_save':
             line = max(1, min(tp.PA_LINES, data or 1))
             pa = tp.pa_value(line)
-            self.printer.sendGCode('SAVE_VARIABLE VARIABLE=pressure_advance VALUE=%.4f\n'
-                                   'SET_PRESSURE_ADVANCE ADVANCE=%.4f' % (pa, pa))
-            self.cal_result('Línea %d: pressure advance %.3f guardado. Se aplica en cada arranque.' % (line, pa))
+            mat = getattr(self, 'pa_material', None)
+            self.printer.sendGCode('SAVE_VARIABLE VARIABLE=pressure_advance VALUE=%.4f\n' % pa +
+                                   ('SAVE_VARIABLE VARIABLE=pa_%s VALUE=%.4f\n' % (mat, pa) if mat else '') +
+                                   'SET_PRESSURE_ADVANCE ADVANCE=%.4f' % pa)
+            self.cal_result('Línea %d: pressure advance %.3f guardado%s.' % (
+                line, pa, ' para %s' % mat.upper() if mat else ''))
         elif action == 'ext_push':
             Thread(target=self.calib_ext_push, args=(data,), daemon=True).start()
         elif action == 'ext_save':
@@ -500,6 +504,10 @@ class KlipperLCD ():
 
     def start(self):
         print("KlipperLCD start")
+        try:   # pieza de la escuadra X/Y (CALIBRAR_ESCUADRA)
+            tp.write_skew_file(os.path.expanduser('~/printer_data/gcodes'))
+        except OSError as e:
+            print('escuadra: %s' % e)
         self.running = True
         #self.lcd.start()
         Thread(target=self.periodic_update).start()
@@ -578,10 +586,13 @@ class KlipperLCD ():
 
 
     def printer_callback(self, data, data_type):
+        if 'Tortillery: sin filamento' in str(data):
+            # el sensor se quedó sin filamento (ya en pausa): aviso con Aceptar -> cabezal a un lado y página cargar
+            self.lcd.write("page sinfil")
         if 'cambio de filamento (M600)' in str(data):
-            # M600 (laminador o Utilidades): la impresora ya está en pausa; decir qué hacer y abrir Filamento
-            self.lcd.show_alert('Cambio de filamento: Retraer el viejo, poner el nuevo, Extruir y luego Reanudar.',
-                                self.lcd.PAGE_PREFILAMENT)
+            # M600 (laminador o Utilidades): ya en pausa y aparcado; la página de Sin filamento, a la temperatura de la
+            # impresión (la de Filamento calentaría a la del material elegido)
+            self.lcd.write("page cargar")
         decided = tp.plr_decided(str(data))
         if decided and self.lcd.confirm_action == self.lcd.evt.PLR_RESUME:
             self.lcd.plr_done(decided == 'resumed')
@@ -835,6 +846,8 @@ class KlipperLCD ():
             self.printer.sendGCode('SET_FILAMENT_SENSOR SENSOR=fila ENABLE=1')
         elif evt == self.lcd.evt.SAVE_CONFIG:
             self.printer.SAVE_CONFIG()
+        elif evt == self.lcd.evt.RUNOUT_PARK:
+            self.printer.sendGCode('_CAMBIO_FILAMENTO')
         elif evt == self.lcd.evt.EMERGENCY_STOP:
             print("Emergency Stop Triggered!")
             self.printer.emergency_stop()

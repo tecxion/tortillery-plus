@@ -331,6 +331,12 @@ def pa_value(line):
     return round(PA_START + (line - 1) * PA_STEP, 4)
 
 
+def object_define(name, x0, y0, x1, y1):
+    """Etiqueta de objeto: con ella PRINT_START purga delante de la pieza y no en el borde de la cama (draw_line)"""
+    return 'EXCLUDE_OBJECT_DEFINE NAME=%s POLYGON=[[%g,%g],[%g,%g],[%g,%g],[%g,%g]]' % (
+        name, x0, y0, x1, y0, x1, y1, x0, y1)
+
+
 def pa_gcode(nozzle, bed, x0=60, y0=60):
     """Patrón de pressure advance (método de líneas): cada línea, lenta-rápida-lenta con un PA mayor que la
     anterior; la buena es la de grosor uniforme, sin bulto ni hueco al cambiar de velocidad. Una marca a la derecha
@@ -339,6 +345,7 @@ def pa_gcode(nozzle, bed, x0=60, y0=60):
     e = w * h / (3.14159 * 0.875 ** 2)   # mm de filamento de 1,75 por mm de línea
     g = ['; Tortillery+ patron de pressure advance: %d lineas, PA %.3f a %.3f (linea 1 delante)'
          % (PA_LINES, PA_START, pa_value(PA_LINES)),
+         object_define('patron_pa', x0, y0, x0 + 86, y0 + 5 * (PA_LINES - 1)),
          'PRINT_START BED=%d EXTRUDER=%d' % (bed, nozzle), 'G90', 'M83', 'G1 Z%.2f F600' % h]
     for i in range(PA_LINES):
         y = y0 + 5 * i
@@ -349,8 +356,65 @@ def pa_gcode(nozzle, bed, x0=60, y0=60):
         if i % 5 == 0:
             g.append('G1 X%d E%.4f F1200' % (x0 + 86, 6 * e))
         g.append('G10')
-    g += ['SET_PRESSURE_ADVANCE ADVANCE=0', 'PRINT_END', '']
+    # al acabar: cabezal a un lado y cama delante (_APARCAR) para ver y elegir la línea
+    g += ['SET_PRESSURE_ADVANCE ADVANCE=0', 'PRINT_END', 'TURN_OFF_HEATERS', 'M107', '_APARCAR', '']
     return '\n'.join(g)
+
+
+SKEW_SIDE, SKEW_W, SKEW_PERIMS, SKEW_LAYERS = 100, 0.45, 4, 6
+
+
+def skew_gcode(nozzle=205, bed=60, cx=120, cy=120):
+    """Escuadra de X/Y para CALIBRAR_ESCUADRA: marco cuadrado de 100 mm (4 perímetros, 6 capas) sin corrección de
+    escuadra, con un cuadradito macizo en la esquina A (delante a la izquierda). Se miden AC, BD (diagonales) y AD
+    (lado delantero) por fuera."""
+    x0, y0, L, w = cx - SKEW_SIDE / 2, cy - SKEW_SIDE / 2, SKEW_SIDE, SKEW_W
+    g = ['; Tortillery+ escuadra X/Y: mide AC, BD y AD y lanza CALIBRAR_ESCUADRA AC= BD= AD=',
+         object_define('escuadra', x0, y0, x0 + L, y0 + L),
+         'PRINT_START BED=%d EXTRUDER=%d MATERIAL=PLA' % (bed, nozzle),
+         'SET_SKEW CLEAR=1', 'G90', 'M83']
+    for n in range(SKEW_LAYERS):
+        h = 0.25 if n == 0 else 0.2
+        z = 0.25 + 0.2 * n
+        e = w * h / (3.14159 * 0.875 ** 2)   # mm de filamento por mm de línea
+        f = 1200 if n == 0 else 1800
+        g.append('G1 Z%.2f F600' % z)
+        for p in range(SKEW_PERIMS):
+            d = w / 2 + p * w   # el borde exterior queda justo en x0, y0 (lado de 100 mm por fuera)
+            pts = [(x0 + d, y0 + d), (x0 + d, y0 + L - d), (x0 + L - d, y0 + L - d), (x0 + L - d, y0 + d)]
+            g += ['G1 X%.3f Y%.3f F6000' % pts[0], 'G11']
+            for a, b in zip(pts, pts[1:] + pts[:1]):
+                g.append('G1 X%.3f Y%.3f E%.5f F%d' % (b + (e * (abs(b[0] - a[0]) + abs(b[1] - a[1])), f)))
+            g.append('G10')
+        lo, hi = SKEW_PERIMS * w, SKEW_PERIMS * w + 8   # marca de la esquina A: 8x8 mm maciza
+        y = y0 + lo + w / 2
+        g += ['G1 X%.3f Y%.3f F6000' % (x0 + lo, y), 'G11']
+        right = True
+        while y < y0 + hi:
+            g.append('G1 X%.3f Y%.3f E%.5f F%d' % (x0 + (hi if right else lo), y, e * (hi - lo), f))
+            y += w
+            if y < y0 + hi:
+                g.append('G1 X%.3f Y%.3f E%.5f F%d' % (x0 + (hi if right else lo), y, e * w, f))
+            right = not right
+        g.append('G10')
+    g += ['PRINT_END', 'TURN_OFF_HEATERS', 'M107', '_APARCAR', '']
+    return '\n'.join(g)
+
+
+def write_skew_file(folder):
+    """Deja Tortillery/escuadra_PLA.gcode en la carpeta de gcodes (el sellado de la imagen los borra)."""
+    path = os.path.join(folder, 'Tortillery', 'escuadra_PLA.gcode')
+    text = skew_gcode()
+    try:
+        with open(path, encoding='utf-8') as f:
+            if f.read() == text:
+                return path
+    except OSError:
+        pass
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text)
+    return path
 
 
 def rotation_distance(current, remaining, marked=120, asked=100):

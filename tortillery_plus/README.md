@@ -15,7 +15,7 @@ En la descarga (Google Drive, enlace en el README) hay:
 3. **En la pantalla**: elige tu modelo (X4 Pro o X4 Plus) y el idioma.
 4. **Bienvenida**: conecta el WiFi y nivela la cama (también se puede luego desde Ajustes). Pulsa *Terminar*.
 
-Mainsail queda en `http://<IP>`; la IP sale en la bienvenida y en Ajustes. Por SSH: `ssh mks@<IP>` (root ya no entra por
+Mainsail queda en `http://tortilleryplus.local` o en `http://<IP>`; la IP sale en la bienvenida y en Ajustes. Por SSH: `ssh mks@<IP>` (root ya no entra por
 SSH con contraseña). Telegram y la IA se activan después desde Mainsail (ver más abajo).
 
 Si algo falla en el primer arranque, el log está en `/var/log/tortillery-firstboot.log`; el primer arranque se repite
@@ -76,8 +76,22 @@ Dos opciones, se pueden usar las dos:
 - **Tortillery IA** (`tortillery-ai.service`, ya instalado): en Mainsail > Máquina abre `tortillery_ai.cfg`, elige
   `proveedor` (anthropic, openai, google, nvidia, ollama u openai_compatible), pon `api_key`/`modelo`/`url` y guarda.
   Mientras imprime manda una foto cada `intervalo` s; con `confirmaciones` fotos seguidas con fallo (espagueti, pieza
-  despegada, atasco) pausa, avisa por Telegram con la foto y lo apunta en Utilidades > Historial de errores.
-  Probar con la cámara mirando a la cama: `python3 /usr/local/bin/tortillery-ai.py --test`.
+  despegada, atasco, bola de plástico en la boquilla, capa desplazada) pausa, avisa por Telegram con la foto y lo apunta en Utilidades >
+  Historial de errores.
+  **En vivo en Mainsail**: en la cámara **ia** (selector de cámaras del panel) ves la última foto que ha mirado la IA, con
+  la pieza en verde, el fallo en rojo y el veredicto arriba. Se actualiza en cada revisión. Para que las cajas salgan
+  bien ajustadas, el modelo que mejor marca dónde están las cosas es Gemini (`proveedor = google`).
+  Probar con la cámara mirando a la cama: `python3 /usr/local/bin/tortillery-ai.py --test` (deja en `config/ia_prueba.jpg`
+  lo que ha visto, marcado).
+  **Marcar la cámara** (recomendado): abre `http://tortilleryplus.local/ia` con la cama vacía. La impresora se coloca en
+  4 posiciones (base, X, Y y Z movidos); en cada foto tocas la punta de la boquilla y las 4 esquinas de la cama
+  (delante = lado de la pantalla; una esquina puede quedar fuera de la foto). Con eso sabe cómo se mueven la cama y el
+  cabezal en la foto, sea cual sea el montaje de la cámara, y en cada revisión recorta justo las piezas (etiquetas de
+  objetos del laminador) desde la cama hasta la altura impresa, sin consultas para buscarlas. Se guarda en
+  `config/ia_marcas.json`; si mueves la cámara, vuelve a marcar (o bórralas desde la misma página). Sin marcas:
+  Cuando localiza la pieza, solo envía esa zona ampliada (se ven mejor los fallos pequeños). Si la foto sale oscura
+  enciende la luz del cabezal en blanco para hacerla; si aun así no se ve, no paga la consulta y avisa por Telegram:
+  **pon luz sobre la cama**, de noche ningún modelo acierta.
   Log: `sudo journalctl -u tortillery-ai -f`. Cada foto es una petición de pago a tu proveedor (Ollama en tu PC: gratis).
   Los 10 primeros minutos mira cada 60 s (la primera capa); si la foto no ha cambiado no paga otra consulta;
   `modelo_confirmar` (opcional) es un segundo modelo que confirma antes de pausar. Si la IA deja de contestar, avisa.
@@ -91,6 +105,13 @@ Cancelar / Otra foto**; el **fin** con foto; el vídeo del **timelapse** si est�
 **mantenimiento** (200 h) al terminar mientras toque. Al bot puedes
 escribirle `/foto`, `/estado`, `/reanudar` y `/cancelar` (solo obedece a tu chat). Utilidades > Más... > QR de Telegram
 abre el bot en el móvil.
+
+**Sin filamento**: cuando el sensor se queda sin filamento la impresora se pausa (sube 20 mm) y **las temperaturas no
+bajan** aunque pase el tiempo. En la pantalla sale *Sin filamento - Cargar filamento*: **Aceptar** lleva el cabezal a
+la izquierda (la cama no se mueve) y abre *Cargar filamento*, con Sacar y Meter de 10, 50 y 100 mm y **Reanudar
+impresión**. Por Telegram llega el aviso con foto y **Enfriar** (apaga solo la boquilla; la cama sigue para que la
+pieza no se despegue, y al reanudar se vuelve a calentar), **Reanudar** y **Cancelar**. Sin filamento en el sensor no
+reanuda (seguiría imprimiendo al aire).
 
 **Corte de luz**: sin corriente la impresora no puede avisar en ese momento; al volver, si había una impresión a
 medias, llega un aviso con la hora del corte y de la vuelta, por dónde iba (Z y % del archivo) y los botones
@@ -110,29 +131,90 @@ pantalla, y al revés. Antes de continuar comprueba que la pieza sigue pegada a 
 - **Input shaper y aceleración**: mide X e Y con el acelerómetro del cabezal y enseña tipo, frecuencia y la aceleración
   máxima que recomienda; Guardar conserva el shaper (`SAVE_CONFIG`) y la aceleración. `M204` del laminador no la supera.
 - **Pressure advance**: elige el material y la impresora imprime 21 líneas (lenta-rápida-lenta, PA de 0 a 0,10). Elige
-  la de grosor más uniforme (la 1 es la de delante; marcas en 1, 6, 11, 16, 21) y Guardar.
+  la de grosor más uniforme (la 1 es la de delante; marcas en 1, 6, 11, 16, 21) y Guardar. Se guarda **para ese
+  material** (y como general): haz el patrón una vez con cada material que uses. Con `MATERIAL=` en `PRINT_START` (ver
+  más abajo) cada impresión usa el suyo. A mano: `GUARDAR_PA MATERIAL=PETG VALOR=0.045`.
 - **Extrusor (100 mm)**: marca el filamento a 120 mm de la entrada, elige material (calienta y empuja 100 mm), mide lo
   que queda hasta la marca y Guardar: corrige `rotation_distance`.
 - **Torsión del eje X**: 3 puntos con papel, como el Z-Offset (la sonda va 17 mm a un lado de la boquilla).
 PA, aceleración y `rotation_distance` se guardan en `config/tortillery_vars.cfg` y se aplican en cada arranque
 (`config/calibracion.cfg`); para volver a lo de `printer.cfg`, borra la línea y reinicia el firmware.
+Input shaper: la prueba mide de 5 a 135 Hz desde el centro de la cama. Hasta la 1.1 cortaba en 70 Hz y no veía la
+resonancia de X (unos 100 Hz en la X4): **repite el input shaper** tras actualizar.
 Gráficas de correas y vibraciones (opcional): `bash ~/tortillery/tortillery_plus/extras.sh shaketune`
 (sin sudo) y en Mainsail `COMPARE_BELTS_RESPONSES` / `AXES_SHAPER_CALIBRATION`.
 
-## Homing exacto de X/Y (recomendado para la recuperación tras corte de luz)
-La X4 no tiene finales de carrera en X e Y: el homing lo detecta el driver cuando el motor choca, y el punto puede
-cambiar unas décimas de un homing a otro. Al imprimir de corrido no se nota, pero al reanudar tras un corte (o tras un
-`G28 X Y` en una pausa) la pieza sigue desplazada esa diferencia.
+## Escuadra de X/Y (piezas cuadradas de verdad)
+Si X e Y no forman exactamente 90°, los cuadrados salen romboides y las piezas que encajan no encajan.
+1. Imprime `Tortillery/escuadra_PLA.gcode` (está en la lista de archivos; PLA, unos 10 min): un marco de 100 mm con un
+   cuadradito macizo en la esquina **A**.
+2. Con un calibre, por fuera: **AC** = diagonal desde A, **BD** = la otra diagonal, **AD** = el lado que va de A a la
+   esquina de su derecha (lado delantero).
+3. En la consola de Mainsail: `CALIBRAR_ESCUADRA AC=141.2 BD=141.6 AD=100.1` (tus medidas). Guarda y reinicia Klipper.
+Se aplica en cada impresión que use `PRINT_START` con temperaturas (después de la purga) y al reanudar tras un corte.
+Para quitarla: `QUITAR_ESCUADRA`. Si las diagonales se diferencian más de 4 mm, ajusta antes la mecánica.
 
-1. En la consola de Mainsail, sin imprimir: `PRUEBA_HOMING` (hace 9 homings desde puntos distintos, unos 2 min). Dice
-   cuántos mm varía cada eje.
-2. Si sale **0,30 mm o menos**: `FIJAR_HOMING`. Guarda la fase de los motores (`[endstop_phase stepper_x/y]` en
-   `printer.cfg`) y reinicia Klipper: desde entonces cada homing acaba en el mismo micropaso, exacto.
-3. Si sale más: tensa las correas y repite. No lo fijes con más variación (podría quedar desplazado 0,8 mm).
+## Homing exacto de X/Y (recomendado para la recuperación tras corte de luz)
+### Por qué varía
+La X4 no tiene finales de carrera en X e Y. El homing lleva el carro (X) o la cama (Y) contra el tope, y el driver del
+motor (TMC2209, función *StallGuard*) nota que el motor se frena y avisa de que ha llegado. Cuánto tiene que frenarse
+para avisar lo decide la **sensibilidad** (`driver_SGTHRS`, de 0 a 255; **más alto = más sensible**):
+- **Demasiado sensible**: confunde el esfuerzo normal del movimiento con un choque y **se para antes del tope** (o ni
+  arranca). La pieza sale desplazada.
+- **Poco sensible**: tarda en darse cuenta, el motor **golpea y patina contra el tope** (ruido de "saltar dientes") y
+  cada homing acaba en un punto distinto. Fuerza correas y poleas.
+- **Bien ajustada**: llega al tope y se para en seco, sin ruido, siempre en el mismo sitio.
+
+El valor correcto depende de la velocidad del homing, la corriente del motor y lo suave que se mueva cada eje, así que
+puede cambiar un poco de una impresora a otra. Tortillery+ (1.1.5) trae: homing a **20 mm/s** (la mitad de
+`rotation_distance`, lo que recomienda Klipper; a 40 mm/s el margen entre "se para antes" y "golpea" era de 1 punto),
+**X = 45** e **Y = 70**, ajustados en una X4 Pro.
+
+### 1. Comprobar el homing
+En la consola de Mainsail, sin imprimir: `PRUEBA_HOMING` (9 homings desde puntos distintos, unos 2 min). Dice cuántos mm
+varía cada eje:
+
+| Resultado | Qué pasa | Qué hacer |
+|---|---|---|
+| 0,30 mm o menos | Bien | Si quieres reanudar exacto tras un corte de luz: paso 3 |
+| Entre 0,30 y 2 mm | Holgura mecánica | Tensa la correa de ese eje, aprieta el prisionero de su polea (que no gire sola sobre el eje del motor) y revisa que el carro o la cama se muevan suaves a mano, sin tirones. Repite la prueba |
+| Más de 2 mm, o se oyen golpes | Sensibilidad mal ajustada | Paso 2 |
+
+### 2. Ajustar la sensibilidad (solo si hace falta)
+Con la mano cerca del interruptor, un eje cada vez (ejemplo con X; para la cama, `stepper_y` y `G28 Y`):
+1. `M18` (suelta los motores), lleva el carro a mano hacia el centro.
+2. `SET_TMC_FIELD STEPPER=stepper_x FIELD=SGTHRS VALUE=45` y luego `G28 X`.
+3. Mira cómo para:
+   - se para antes del tope o no se mueve → **baja** 5;
+   - golpea, vibra o suena a dientes saltando → **sube** 5;
+   - llega y se para en seco → anota el valor.
+
+   Repite desde el paso 1 hasta dar con el rango bueno y quédate con un valor **del medio**, no con el límite (si 40 y
+   55 fallan y 45-50 van bien, usa 45 o 50).
+4. Con los valores puestos (sin reiniciar Klipper, que los borra), `PRUEBA_HOMING` para confirmarlo.
+5. Para que se queden: en Mainsail › Máquina, crea `ajustes/homing.cfg` con `[tmc2209 stepper_x]` y
+   `driver_SGTHRS: 50` (tu valor; igual con `stepper_y`) y reinicia el firmware. Así no se pierde al actualizar
+   ([más ajustes](../printer/README.md)).
+
+### 3. Dejarlo exacto (recomendado para la recuperación tras corte de luz)
+Al imprimir de corrido unas décimas no se notan, pero al reanudar tras un corte (o tras un `G28 X Y` en una pausa) la
+pieza sigue desplazada esa diferencia. Con la sensibilidad ya buena y **justo después de reiniciar Klipper** (así no
+cuentan los homings de los ajustes):
+1. `PRUEBA_HOMING`. Si sale **0,30 mm o menos**:
+2. `FIJAR_HOMING`. Guarda la fase de los motores (`[endstop_phase stepper_x/y]` al final de `printer.cfg`) y reinicia
+   Klipper: desde entonces cada homing acaba en el mismo micropaso, exacto. No lo fijes con más variación (podría quedar
+   desplazado 0,8 mm).
 
 Para deshacerlo, borra las secciones `[endstop_phase stepper_x]` y `[endstop_phase stepper_y]` del final de
 `printer.cfg` y reinicia el firmware. Si algún día un homing falla con "Endstop stepper_x incorrect phase", deshazlo y
-repite la prueba (por ejemplo, después de cambiar una correa o un motor).
+repite la prueba. Repítela también si cambias la sensibilidad, una correa o un motor.
+
+No subas X/Y a más de 16 micropasos: el driver deja de notar el choque y el homing golpea el tope sin pararse.
+
+## Tiempo de impresión exacto
+Moonraker pasa cada G-code que subes por Klipper Estimator, que calcula el tiempo con las velocidades y aceleraciones
+reales de tu impresora (no con las del laminador). El tiempo restante de Mainsail y de la pantalla sale mucho más
+ajustado. Solo los archivos subidos por Mainsail o el laminador (no los copiados a mano al USB).
 
 ## Rendimiento (lo aplica install.sh)
 CPU en `performance` (`/etc/default/cpufrequtils`, lo aplica Armbian al arrancar), Klipper con más prioridad
@@ -141,8 +223,10 @@ CPU en `performance` (`/etc/default/cpufrequtils`, lo aplica Armbian al arrancar
 ## G-code de inicio en el laminador (opcional, recomendado)
 `PRINT_START` sin parámetros hace lo mismo que antes. Con temperaturas hace todo el inicio: calentar cama → home →
 malla adaptativa (solo bajo las piezas) → calentar boquilla → línea de purga (`draw_line`). Sustituye el G-code de inicio por:
-- **OrcaSlicer**: `PRINT_START BED=[bed_temperature_initial_layer_single] EXTRUDER=[nozzle_temperature_initial_layer]`
-- **Cura**: `PRINT_START BED={material_bed_temperature_layer_0} EXTRUDER={material_print_temperature_layer_0}`
+- **OrcaSlicer**: `PRINT_START BED=[bed_temperature_initial_layer_single] EXTRUDER=[nozzle_temperature_initial_layer] MATERIAL=[filament_type]`
+- **Cura**: `PRINT_START BED={material_bed_temperature_layer_0} EXTRUDER={material_print_temperature_layer_0} MATERIAL={material_type}`
+
+`MATERIAL=` aplica el pressure advance guardado para ese material (PLA, PETG, ABS/ASA o TPU); sin él, el general.
 
 Añade `PURGE=0` si no quieres la línea de purga. La malla adaptativa necesita etiquetas de objetos en el G-code: OrcaSlicer
 las pone por defecto ("Label objects"); con Cura, Moonraker las añade solo si el archivo se **sube** por Mainsail o desde el
@@ -193,11 +277,11 @@ configurado en este repo con `gpg.format ssh`, `user.signingkey` y `tag.gpgSign`
 ```powershell
 git add .
 git status
-git commit -m "Tortillery+ 1.1.0"
-git tag v1.1.0 -m "Tortillery+ 1.1.0"
-git push origin main v1.1.0
+git commit -m "Tortillery+ 1.1.4"
+git tag v1.1.4 -m "Tortillery+ 1.1.4"
+git push origin main v1.1.4
 ```
-Antes, sube `VERSION` en `install.sh`. Comprobar la firma: `git verify-tag v1.1.0` (con `gpg.ssh.allowedSignersFile`
+Antes, sube `VERSION` en `install.sh`. Comprobar la firma: `git verify-tag v1.1.4` (con `gpg.ssh.allowedSignersFile`
 apuntando a `tortillery_plus/system/tortillery_allowed_signers`, ya configurado). **Sin las claves de
 `%USERPROFILE%\.tortillery` no podrás publicar versiones que las impresoras acepten: haz una copia.**
 

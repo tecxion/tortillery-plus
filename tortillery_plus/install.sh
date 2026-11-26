@@ -4,7 +4,7 @@
 # Every replaced file is backed up as <file>.orig (only the first time).
 set -e
 [ "$(id -u)" = 0 ] || { echo "Ejecuta con sudo"; exit 1; }
-VERSION="1.1.4"
+VERSION="1.1.5"
 REPO_URL="https://github.com/tecxion/tortillery-plus.git"   # repo público de Tortillery+ (update_manager)
 MODEL="${1^^}"
 [ "$MODEL" = PRO ] || [ "$MODEL" = PLUS ] || { echo "Uso: sudo bash install.sh PRO|PLUS"; exit 1; }
@@ -62,6 +62,7 @@ put "$HERE/config/utilidades.cfg"   "$CFG/utilidades.cfg"                  644 m
 put "$HERE/config/kamp_tortillery.cfg" "$CFG/kamp_tortillery.cfg"         644 mks
 put "$HERE/config/calibracion.cfg"  "$CFG/calibracion.cfg"                 644 mks
 install -d -o mks -g mks "$CFG/extras"   # complementos de extras.sh (printer.cfg incluye extras/*.cfg)
+install -d -o mks -g mks "$CFG/ajustes"  # ajustes del usuario (printer.cfg los incluye al final; no se tocan)
 put "$HERE/utils/tortillery-backup.sh"      /usr/local/bin/tortillery-backup.sh      755 root
 put "$HERE/utils/tortillery-maintenance.sh" /usr/local/bin/tortillery-maintenance.sh 755 root
 # Model templates stay in config/ so they can be renamed again later
@@ -98,6 +99,12 @@ if ! grep -q '^\[webcam' "$CFG/moonraker.conf"; then
         >> "$CFG/moonraker.conf"
     echo "  [webcam camara] anadida a moonraker.conf"
 fi
+# Segunda cámara en Mainsail: lo que mira la IA en cada revisión, con la pieza (verde) y el fallo (rojo) marcados
+if ! grep -q '^\[webcam ia\]' "$CFG/moonraker.conf"; then
+    printf '\n[webcam ia]\nservice: mjpegstreamer-adaptive\ntarget_fps: 1\nstream_url: /server/files/logs/ia_vista.jpg\nsnapshot_url: /server/files/logs/ia_vista.jpg\n' \
+        >> "$CFG/moonraker.conf"
+    echo "  [webcam ia] anadida a moonraker.conf"
+fi
 # Klipper con prioridad sobre el resto y CPU siempre a su frecuencia (Armbian lee GOVERNOR al arrancar)
 put "$SYS/klipper-tortillery.conf" /etc/systemd/system/klipper.service.d/tortillery.conf 644 root
 if [ -f /etc/default/cpufrequtils ]; then
@@ -132,6 +139,26 @@ install -m 644 "$SYS/tortillery_allowed_signers" /usr/local/share/tortillery/tor
 systemctl daemon-reload
 systemctl enable tortillery-ai.service >/dev/null 2>&1 && echo "  tortillery-ai.service activado"
 systemctl restart tortillery-ai.service 2>/dev/null || true
+# Web para marcar la cámara (http://tortilleryplus.local/ia): página estática en el nginx de Mainsail que usa la
+# API de Moonraker; guarda config/ia_marcas.json, que lee tortillery-ai.py
+install -d -m 755 /usr/local/share/tortillery/ia
+install -m 644 "$HERE/web/ia/index.html" /usr/local/share/tortillery/ia/index.html
+NGX=/etc/nginx/sites-available/mainsail
+if [ -f "$NGX" ] && ! grep -q 'location /ia/' "$NGX"; then
+    sed -i 's|^    location / {|    location = /ia { return 301 /ia/; }\n    location /ia/ {\n        alias /usr/local/share/tortillery/ia/;\n        add_header Cache-Control "no-store";\n    }\n\n    location / {|' "$NGX"
+    echo "  $NGX: /ia"
+fi
+nginx -t >/dev/null 2>&1 && { systemctl reload nginx 2>/dev/null || true; }
+# Nombre en la red: http://tortilleryplus.local (avahi). Solo si conserva el de la imagen: no pisa uno propio
+OLD=$(cat /etc/hostname 2>/dev/null)
+if [ "$OLD" = tortillery ] || [ "$OLD" = mkspi ]; then
+    echo tortilleryplus > /etc/hostname
+    sed -i "s/^127\.0\.1\.1.*/127.0.1.1\ttortilleryplus/" /etc/hosts
+    grep -q '^127\.0\.1\.1' /etc/hosts || printf '127.0.1.1\ttortilleryplus\n' >> /etc/hosts
+    hostname tortilleryplus 2>/dev/null || true
+    systemctl restart avahi-daemon 2>/dev/null || true
+    echo "  nombre en la red: tortilleryplus.local (antes $OLD)"
+fi
 
 # Things that must not run in the middle of a print / are not used
 for unit in unattended-upgrades.service apt-daily.timer apt-daily-upgrade.timer \
@@ -157,6 +184,23 @@ if ! grep -q '^\[file_manager\]' "$CFG/moonraker.conf"; then
     [ -f "$CFG/moonraker.conf.orig" ] || cp -p "$CFG/moonraker.conf" "$CFG/moonraker.conf.orig"
     printf '\n[file_manager]\nenable_object_processing: True\n' >> "$CFG/moonraker.conf"
     echo "  [file_manager] enable_object_processing anadido a moonraker.conf"
+fi
+# Moonraker 0.10+: tiempo de impresión calculado con los límites reales de esta impresora (Klipper Estimator), no
+# el del laminador. El programa se baja aquí: Moonraker solo lo intenta al arrancar y en la imagen aún no hay red.
+if [ -f /home/mks/moonraker/moonraker/components/analysis.py ]; then
+    EST=/home/mks/printer_data/tools/klipper_estimator
+    mkdir -p "$EST"
+    if [ ! -x "$EST/klipper_estimator_rpi" ] && timeout 180 curl -fsSL -o "$EST/klipper_estimator_rpi.tmp" \
+        https://github.com/Annex-Engineering/klipper_estimator/releases/latest/download/klipper_estimator_rpi; then
+        chmod 755 "$EST/klipper_estimator_rpi.tmp" && mv "$EST/klipper_estimator_rpi.tmp" "$EST/klipper_estimator_rpi"
+        echo "  klipper_estimator descargado"
+    fi
+    rm -f "$EST/klipper_estimator_rpi.tmp"
+    chown -R mks:mks /home/mks/printer_data/tools
+    if ! grep -q '^\[analysis\]' "$CFG/moonraker.conf"; then
+        printf '\n[analysis]\nauto_dump_default_config: True\nenable_auto_analysis: True\n' >> "$CFG/moonraker.conf"
+        echo "  [analysis] anadido a moonraker.conf"
+    fi
 fi
 
 # Klipper, Moonraker y Mainsail desde Mainsail solo en versiones estables (la imagen traía channel: dev)

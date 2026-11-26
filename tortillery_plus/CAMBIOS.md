@@ -32,6 +32,8 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   mientras imprime.
 - Klipper, Moonraker y Mainsail, desde Mainsail, en canal `stable` (la imagen traía `dev`). La imagen 1.1.3 trae
   Klipper 0.14.0, Moonraker 0.11.0 y Mainsail 2.19.0 (el firmware de la placa no hace falta cambiarlo).
+- **Tiempo de impresión exacto (1.1.5)**: Klipper Estimator (Moonraker `[analysis]`) recalcula el tiempo de cada G-code
+  subido con los límites reales de la impresora.
 - Mainsail busca versiones nuevas de Tortillery+ cada día (antes cada 7 y solo de madrugada).
 - Mainsail ya no marca Klipper con aviso por los extras propios (`plr.py`, `gcode_shell_command.py`): git los ignora.
 - Kernel y arranque de la placa retenidos (`apt-mark hold`): una actualización de Armbian podía dejarla sin arrancar.
@@ -91,6 +93,27 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - **Homing exacto de X/Y (1.1)**: `PRUEBA_HOMING` mide en mm cuánto varía el homing sin finales de carrera y
     `FIJAR_HOMING` guarda la fase de los motores (`endstop_phase`) para que caiga siempre en el mismo micropaso. Así
     la recuperación tras un corte de luz vuelve al punto exacto.
+  - **Input shaper bien medido (1.1.5)**: la prueba de vibraciones cortaba en 70 Hz y la resonancia de X de la X4 está
+    en unos 100 Hz; ahora mide de 5 a 135 Hz desde el centro de la cama.
+  - **Pressure advance por material (1.1.5)**: el patrón guarda el valor de cada material y `PRINT_START MATERIAL=...`
+    aplica el suyo (lo que hacen Bambu o Creality con su calibración de flujo, sin sensor). También al reanudar tras
+    un corte de luz.
+  - **Escuadra de X/Y (1.1.5)**: pieza de 100 mm ya preparada y `CALIBRAR_ESCUADRA` (`skew_correction`).
+  - **Patrones de calibración (1.1.5)**: purgan delante del patrón (no en el borde de la cama, donde se podía salir) y
+    al acabar el cabezal se aparta y la cama sale adelante.
+  - **Parada de emergencia en la pantalla de impresión (1.1.5)**: botón rojo arriba a la izquierda, con confirmación.
+  - **Sin filamento (1.1.5)**: aviso en la pantalla (Aceptar aparta el cabezal y abre Sacar/Meter 10-50-100 mm y
+    Reanudar) y en Telegram con Enfriar / Reanudar / Cancelar. Las temperaturas ya no bajan solas en esa pausa y no
+    reanuda sin filamento en el sensor. Antes paraba sin decir nada, con el cabezal encima de la pieza.
+  - **No imprime sin filamento (1.1.5)**: con el sensor activo y sin filamento, `PRINT_START` para con un aviso en
+    vez de calentar e imprimir al aire.
+  - **M600 a la temperatura de la impresión (1.1.5)**: el cambio de filamento abre la misma página Sacar/Meter que
+    Sin filamento (la de Filamento calentaba a la temperatura del material elegido).
+  - **Tus ajustes no se pierden (1.1.5)**: `printer.cfg` incluye al final `config/ajustes/*.cfg`, que las
+    actualizaciones no tocan; lo que pongas ahí gana sobre el resto (guía en `printer/README.md`).
+  - **Nombre en la red (1.1.5)**: `http://tortilleryplus.local` (antes había que buscar la IP).
+  - **Purga sin etiquetas de objetos (1.1.5)**: la de Artillery, 8 mm más adentro; en el borde se podía salir de la cama.
+  - **Homing de X/Y fiable (1.1.5)**: a 20 mm/s y con la sensibilidad ajustada: ya no golpea el tope ni se para antes, y `PRUEBA_HOMING` baja de varios mm a 0,2 mm.
   - Valores en `tortillery_vars.cfg`.
 - Utilidades:
   - `COPIA_SEGURIDAD_USB`.
@@ -124,7 +147,7 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
 ## Cámara, IA y avisos
 - **Cámara USB/USB-C automática** (cualquier webcam UVC) y `[webcam]` en Mainsail sin configurar nada.
 - **Vigilancia con IA**:
-  - Detecta espagueti, pieza despegada y atasco.
+  - Detecta espagueti, pieza despegada, atasco, bola en la boquilla y capa desplazada.
   - Proveedores: Anthropic, OpenAI, Google, NVIDIA, Ollama o compatible. Se configura en `tortillery_ai.cfg` desde
     Mainsail.
   - Pausa y avisa con foto.
@@ -132,6 +155,19 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - No paga fotos iguales.
   - `modelo_confirmar` (un segundo modelo confirma antes de pausar).
   - Avisa si la vigilancia deja de funcionar.
+  - **Bola en la boquilla (1.1.5)**: detecta el plástico que se acumula alrededor de la boquilla antes de que envuelva
+    el hotend.
+  - **Capa desplazada (1.1.5)**: también avisa si las capas de arriba se han movido de lado respecto a las de abajo.
+  - **Mira la pieza de cerca (1.1.5)**: cuando localiza la pieza, solo envía esa zona ampliada (los fallos pequeños se
+    pierden en la foto entera).
+  - **Marcar la cámara (1.1.5)**: web `http://tortilleryplus.local/ia` (4 fotos en 4 posiciones, tocas la boquilla y
+    las esquinas de la cama). La IA sabe dónde está cada pieza en la foto aunque se muevan la cama y el cabezal, con
+    la cámara en cualquier sitio, y la mira de cerca sin gastar consultas en buscarla.
+  - **Fotos oscuras (1.1.5)**: si la foto sale oscura, enciende la luz del cabezal en blanco para hacerla y la deja
+    como estaba; si aun así no se ve, no paga la consulta y avisa una vez por Telegram (de noche ningún modelo
+    acierta).
+  - **En vivo en Mainsail (1.1.5)**: cámara **ia** con la última foto revisada, la pieza (verde) y el fallo (rojo)
+    marcados y el veredicto.
   - **Cualquier cámara (1.1)**: al empezar cada impresión la IA busca la cama en la foto y solo mira esa zona,
     ampliada. Compara cada foto con otra de hace unos minutos (pieza movida, espagueti que crece). Entiende el
     razonamiento de los modelos que piensan (`<think>`). Cada foto queda en el log. `--test foto.jpg` prueba con
