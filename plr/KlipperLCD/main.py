@@ -62,6 +62,9 @@ class KlipperLCD ():
         progress_bar = 1
         model_asked = False
         while not self.update_printer():
+            if getattr(self, 'rebooting', False):   # modelo elegido: no pisar el aviso de reinicio
+                time.sleep(1)
+                continue
             progress_bar += 5
             # Si Klipper no arranca (p. ej. imagen recién grabada sin printer.cfg), decir por qué y la IP para SSH
             text = "Starting Klipper..."
@@ -223,7 +226,10 @@ class KlipperLCD ():
     def setup_model(self, model):
         self.lcd.boot_progress(50, 'Configurando X4 %s...' % model)
         ok, msg = tp.set_model(model)
-        if not ok:
+        if ok:
+            self.rebooting = True
+            self.lcd.boot_progress(99, 'X4 %s listo: reiniciando la impresora...' % model)
+        else:
             self.lcd.write('page modelo')
             self.lcd.show_alert('No se pudo configurar el modelo: %s' % tp.lcd_text(msg), 1)
 

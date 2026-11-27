@@ -12,7 +12,7 @@ En la descarga (Google Drive, enlace en el README) hay:
 1. **balenaEtcher**: graba `Tortillery+_<versión>.img` en la eMMC y deja que verifique la escritura.
 2. Pon la eMMC y **enciende la impresora**. El primer arranque tarda unos minutos y lo hace todo solo: graba la placa y la
    pantalla y crea la identidad propia de la impresora (claves SSH, machine-id, `MCU_ID.cfg`).
-3. **En la pantalla**: elige tu modelo (X4 Pro o X4 Plus) y el idioma.
+3. **En la pantalla**: elige el idioma y tu modelo (X4 Pro o X4 Plus). La impresora se reinicia sola una vez.
 4. **Bienvenida**: conecta el WiFi y nivela la cama (también se puede luego desde Ajustes). Pulsa *Terminar*.
 
 Mainsail queda en `http://tortilleryplus.local` o en `http://<IP>`; la IP sale en la bienvenida y en Ajustes. Por SSH: `ssh mks@<IP>` (root ya no entra por

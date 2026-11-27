@@ -217,10 +217,10 @@ def needs_model(info):
 
 
 def set_model(model):
-    """-> (ok, mensaje). Escribe printer.cfg/macros.cfg del modelo y reinicia Klipper."""
+    """-> (ok, mensaje). Escribe printer.cfg/macros.cfg del modelo y reinicia la impresora."""
     import subprocess
     try:
-        r = subprocess.run(['sudo', '-n', MODEL_SCRIPT, model, '--restart'], text=True, capture_output=True,
+        r = subprocess.run(['sudo', '-n', MODEL_SCRIPT, model, '--reboot'], text=True, capture_output=True,
                            timeout=60)
     except Exception as e:
         return False, str(e)

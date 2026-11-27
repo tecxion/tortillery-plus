@@ -39,5 +39,7 @@ install -m 644 "$CFG/macros_X4_$MODEL.cfg" "$CFG/macros.cfg"
 echo "  $CFG/printer.cfg y macros.cfg: X4 $MODEL"
 EOF
 echo "$MODEL" > /etc/tortillery-model
-[ "$2" = --restart ] && systemctl restart klipper   # asistente de la pantalla
+# asistente de la pantalla: reinicia la impresora entera (con solo reiniciar Klipper la pantalla se quedaba en
+# "falta printer.cfg" hasta apagar y encender)
+[ "$2" = --reboot ] && systemctl reboot
 exit 0

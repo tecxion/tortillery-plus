@@ -9,6 +9,8 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   identidad propia de cada impresora: claves SSH, machine-id y `MCU_ID.cfg`. Antes todas las impresoras compartían claves
   SSH y podían recibir la misma IP. También graba la placa y la pantalla sin USB.
 - **Asistente en la pantalla**: modelo (X4 Pro o X4 Plus), idioma y bienvenida con WiFi y nivelación. Sin SSH.
+  Al elegir el modelo la impresora se reinicia sola (1.1.5): antes la pantalla se quedaba en "falta printer.cfg"
+  hasta apagarla y encenderla.
 - `install.sh PRO|PLUS`: instala o actualiza conservando la calibración (bloque `SAVE_CONFIG`). Hace copia `.orig` de
   cada archivo que reemplaza.
 - `tortillery-seal.sh`: prepara una impresora para copiarla como imagen. Borra redes, claves, historial, tokens, API keys y
