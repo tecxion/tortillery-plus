@@ -377,6 +377,27 @@ class KlipperLCD ():
         text, self.pending_accel = tp.shaper_text(res)
         self.cal_result(text + '\\rGuardar reinicia Klipper.', 0x81)
 
+    def auto_mesh(self, points):
+        """Nivelación automática: la pantalla de espera se queda hasta que Klipper acaba la malla (antes volvía al menú
+        en cuanto veía mandado el SAVE_CONFIG) y luego un aviso con el desnivel; OK vuelve a Nivelación (o a la
+        bienvenida del primer arranque)."""
+        self.cal_busy('Nivelando la cama: espera a que termine...')
+        since = time.time() - 1
+        self.printer.sendGCode('\n'.join(tp.auto_mesh_gcode(points, self.printer.ishomed())))
+        ok = self.wait_response(tp.MESH_DONE, since, 3600)
+        back = tp.PAGE_ASISTENTE if os.path.exists(tp.SETUP_PENDING) else tp.PAGE_LEVELMENU
+        if not ok:
+            self.lcd.show_alert('La nivelacion no ha terminado. Mira la consola de Mainsail.', back)
+            return
+        try:
+            matrix = self.printer.getREST('/printer/objects/query?bed_mesh')['result']['status']['bed_mesh'][
+                'probed_matrix']
+        except Exception:
+            matrix = None
+        self.printer.sendGCode('SAVE_CONFIG')   # guarda la malla "default" (Klipper se reinicia)
+        self.lcd.write("levelmenu_z.va1.val=1")
+        self.lcd.show_alert(tp.mesh_summary(matrix), back)
+
     def calib_ext_push(self, temp):
         self.cal_busy('Calentando a %d C y empujando 100 mm...' % temp)
         since = time.time() - 1
@@ -809,13 +830,7 @@ class KlipperLCD ():
         elif evt == self.lcd.evt.CONSOLE:
             self.printer.sendGCode(data)
         elif evt == self.lcd.evt.AutoBedMesh:
-            self.lcd.write("page autohome")
-            self.lcd.write('autohome.t1.txt="Bed Mesh Processing..."')
-            for g in tp.auto_mesh_gcode(data, self.printer.ishomed()):   # data = puntos por lado (0: printer.cfg)
-                self.printer.sendGCode(g)
-            self.printer.wait_for_gcode_command(gcode_code='Mesh Bed Leveling Complete')
-            self.lcd.write("levelmenu_z.va1.val=1")
-            self.lcd.write("page levelmenu")
+            Thread(target=self.auto_mesh, args=(data,), daemon=True).start()   # data = puntos por lado (0: printer.cfg)
         elif evt == self.lcd.evt.Screw_Adjust:
             self.printer.Screw_Adjust(data)
         elif evt == self.lcd.evt.Screws_Tilt_Calculate:

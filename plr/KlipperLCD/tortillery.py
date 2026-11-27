@@ -181,11 +181,26 @@ def neopixel_gcode(kind, value):
     return 'LUZ_LED MODO=1 R=%s G=%s B=%s' % (r, g, b)
 
 
+MESH_DONE = 'tortillery_mesh_ok'   # respuesta de Klipper al acabar la malla (main.auto_mesh la espera)
+PAGE_LEVELMENU, PAGE_ASISTENTE = 60, 90   # ids reales en el TFT (OK del aviso: page nextpages)
+
+
 def auto_mesh_gcode(points, homed):
-    """Malla automática como printer.AutoBedMesh, con points x points puntos (0 = los de printer.cfg)."""
+    """Malla automática como printer.AutoBedMesh, con points x points puntos (0 = los de printer.cfg).
+    Acaba avisando con MESH_DONE; el SAVE_CONFIG lo manda KlipperLCD después de leer la malla."""
     count = ' PROBE_COUNT=%d,%d' % (points, points) if points else ''
     return (['M140 S60', 'M104 S150'] + ([] if homed else ['G28']) +
-            ['M190 S60', 'M109 S150', 'BED_MESH_CALIBRATE PROFILE="default"' + count, 'SAVE_CONFIG'])
+            ['M190 S60', 'M109 S150', 'BED_MESH_CALIBRATE PROFILE="default"' + count, 'RESPOND MSG="%s"' % MESH_DONE])
+
+
+def mesh_summary(matrix):
+    """Texto del aviso de fin de nivelación a partir de bed_mesh.probed_matrix (lista de filas)."""
+    vals = [v for row in matrix or [] for v in row]
+    if not vals:
+        return 'Nivelacion terminada y guardada.'
+    lo, hi = min(vals), max(vals)
+    return ('Nivelacion terminada: malla %dx%d guardada.\\rDesnivel: %.3f mm\\rMin %.3f / Max %.3f mm'
+            % (len(matrix[0]), len(matrix), hi - lo, lo, hi))
 
 
 def next_mesh_name(existing):
