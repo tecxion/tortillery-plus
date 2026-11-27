@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-f1bf00)
 
-[Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md) · [Personalizar](printer/README.md) · [Ejemplos](ejemplos/README.md) · [Telegram](telegram/README.md) · [🇬🇧 English](Traducido/README.md)
+[📖 Wiki](https://github.com/tecxion/tortillery-plus/wiki) · [Descargar](#-descarga) · [Instalar](#-instalación) · [SSH](#-conectarse-por-ssh) · [Preguntas](#-preguntas-frecuentes) · [Problemas](#-problemas-comunes) · [Novedades](tortillery_plus/CAMBIOS.md) · [Guía completa](tortillery_plus/README.md) · [Personalizar](printer/README.md) · [Ejemplos](ejemplos/README.md) · [Telegram](telegram/README.md) · [🇬🇧 English](Traducido/README.md)
 
 </div>
 
@@ -34,6 +34,10 @@ editar archivos y conservando tu calibración en cada actualización.
 | 🛡️ **Más segura**         | Apagado de calentadores en pausas largas, detección de termistor suelto, watchdog y copias automáticas de la config.      |
 
 Lista completa de cambios respecto a la Tortillery original: **[CAMBIOS.md](tortillery_plus/CAMBIOS.md)**.
+
+> [!TIP]
+> **[📖 Wiki de Tortillery+](https://github.com/tecxion/tortillery-plus/wiki)**: instalación, pantalla, calibración, filamento, corte de luz, Telegram, IA,
+> macros y problemas comunes, cada cosa en su página.
 
 ## 🆕 Novedades de la 1.1.5 (beta)
 

@@ -11,7 +11,7 @@
 ![Klipper](https://img.shields.io/badge/Klipper-Moonraker%20%2B%20Mainsail-b12f36)
 ![Language](https://img.shields.io/badge/screen-English%20%7C%20Espa%C3%B1ol-f1bf00)
 
-[Download](#-download) · [Install](#-installation) · [SSH](#-connecting-over-ssh) · [FAQ](#-frequently-asked-questions) · [Troubleshooting](#-common-problems) · [Changes](../tortillery_plus/CAMBIOS.md) · [Full guide](../tortillery_plus/README.md) · [Customise](printer/README.md) · [Examples](../ejemplos/README.md) · [Telegram](telegram/README.md) · [🇪🇸 Español](../README.md)
+[📖 Wiki (Spanish)](https://github.com/tecxion/tortillery-plus/wiki) · [Download](#-download) · [Install](#-installation) · [SSH](#-connecting-over-ssh) · [FAQ](#-frequently-asked-questions) · [Troubleshooting](#-common-problems) · [Changes](../tortillery_plus/CAMBIOS.md) · [Full guide](../tortillery_plus/README.md) · [Customise](printer/README.md) · [Examples](../ejemplos/README.md) · [Telegram](telegram/README.md) · [🇪🇸 Español](../README.md)
 
 </div>
 
