@@ -87,6 +87,12 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   laminador).
 - `[firmware_retraction]` (G10/G11), `[respond]`, `M300` con tono, duración y repeticiones.
 - Corregido `idle_timeout` en pausa (`pause_resume.is_paused` nunca se activaba).
+- **Sonda más precisa (1.1.5)**: `speed: 3`, `lift_speed: 12`, 3 toques y `samples_result: median` (antes 5 o 10 mm/s,
+  2 toques y la media). Según las medidas de [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/The-Inductive-Z%E2%80%90Probe), con la cama y la boquilla calientes la sonda
+  varía menos de la mitad.
+- **Ventilador de la placa (1.1.5)**: `FAN2` (PC9) pasa de `heater_fan` a `[controller_fan]`. Antes solo giraba con la
+  boquilla caliente; ahora gira al 80 % con cualquier motor o calentador encendido y 3 minutos más al 70 %. Idea de
+  [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/Smarter-Mainboard-Fan-Controller).
 - **Calibración guiada (2.0)**:
   - Input shaper X+Y con la aceleración máxima recomendada, guardada y aplicada al arrancar. `M204` no la supera.
   - Patrón de pressure advance.

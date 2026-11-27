@@ -52,6 +52,10 @@ Lista completa de cambios respecto a la Tortillery original: **[CAMBIOS.md](tort
   exacto para la recuperación tras un corte de luz.
 
 **Calibración**
+- 🎯 **Sonda más precisa**: baja más despacio, toca 3 veces en cada punto y se queda con la mediana. Idea y medidas de
+  [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/The-Inductive-Z%E2%80%90Probe).
+- 📐 **Nivelación automática**: la pantalla espera a que termine la malla y avisa con el desnivel (antes volvía al menú a
+  medias).
 - Input shaper medido de 5 a 135 Hz (antes cortaba en 70 Hz y la resonancia de X de la X4 está en unos 100 Hz).
 - Pressure advance por material: `PRINT_START MATERIAL=...` aplica el de PLA, PETG, ABS/ASA o TPU.
 - Escuadra de X/Y con `CALIBRAR_ESCUADRA`.
@@ -65,6 +69,9 @@ Lista completa de cambios respecto a la Tortillery original: **[CAMBIOS.md](tort
 - Cámara **ia** en Mainsail con lo último que ha revisado.
 
 **Sistema**
+- 🌀 **Ventilador de la placa**: antes solo giraba con la boquilla caliente; ahora refrigera los drivers siempre que hay
+  motores o calentadores encendidos, y 3 minutos más al 70 %. Idea de [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/Smarter-Mainboard-Fan-Controller).
+- 🔄 Primer arranque: al elegir el modelo la impresora se reinicia sola (antes se quedaba en "falta printer.cfg").
 - 🌐 La impresora se llama **`tortilleryplus.local`** en la red: ya no hace falta buscar la IP.
 - ⏱️ Tiempo de impresión exacto (Klipper Estimator).
 - 🛠️ **Tus ajustes no se pierden al actualizar**: lo que pongas en `config/ajustes/` gana sobre `printer.cfg`. Cómo
@@ -382,6 +389,8 @@ assets/              imágenes del README
 - **[joakimtoe/KlipperLCD](https://github.com/joakimtoe/KlipperLCD)** (Apache-2.0) — el programa que une la pantalla con
   Klipper. Los archivos modificados están en `plr/KlipperLCD/` con su licencia.
 - **JeroMod** y **Tortillery 2.0** (@UrtziDV) — ideas incorporadas.
+- **[grumat/artillery-x4-pro_config](https://github.com/grumat/artillery-x4-pro_config)** — sus medidas de la sonda inductiva y el ventilador de la placa.
+- **[Mustafa Yücel](https://yucellmustafa.com.tr/blog/swx4-tortillery)** — el método para instalar sin adaptador de eMMC.
 - [Klipper](https://github.com/Klipper3d/klipper), [Moonraker](https://github.com/Arksine/moonraker),
   [Mainsail](https://github.com/mainsail-crew/mainsail), Crowsnest, KAMP, Shake&Tune, Moonraker-Timelapse, Mobileraker y
   Armbian.

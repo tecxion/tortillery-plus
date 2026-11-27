@@ -140,11 +140,13 @@ Then run `PRUEBA_HOMING` and, if it looks good, `FIJAR_HOMING`.
 
 ```ini
 [probe]
-samples: 3                  # stock 2 touches per point
-samples_tolerance: 0.02     # stock 0.03 mm
+samples: 5                  # Tortillery+ 3 touches per point (keeps the median)
+samples_tolerance: 0.02     # Tortillery+ 0.03 mm
 ```
 
-The mesh takes longer.
+The mesh takes longer. Since 1.1.5 the probe already moves down at 3 mm/s and uses the median of 3 touches, as
+[grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/The-Inductive-Z%E2%80%90Probe) suggests: according to
+his measurements, it varies less than half as much.
 
 ### Part cooling fan
 

@@ -59,6 +59,10 @@ Full list of changes compared with the original Tortillery: **[CAMBIOS.md](../to
   power-loss recovery.
 
 **Calibration**
+- 🎯 **More accurate probe**: it moves down slower, touches 3 times at each point and keeps the median. Idea and
+  measurements by [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/The-Inductive-Z%E2%80%90Probe).
+- 📐 **Auto bed levelling**: the screen waits until the mesh is finished and then shows the deviation (it used to go
+  back to the menu halfway).
 - Input shaper measured from 5 to 135 Hz (it stopped at 70 Hz and the X4's X resonance is around 100 Hz).
 - Pressure advance per material: `PRINT_START MATERIAL=...` applies the one for PLA, PETG, ABS/ASA or TPU.
 - X/Y skew with `CALIBRAR_ESCUADRA`.
@@ -72,6 +76,9 @@ Full list of changes compared with the original Tortillery: **[CAMBIOS.md](../to
 - **ia** camera in Mainsail with the last photo it checked.
 
 **System**
+- 🌀 **Mainboard fan**: it used to spin only with a hot nozzle; now it cools the drivers whenever motors or heaters are
+  on, and for 3 more minutes at 70 %. Idea by [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/Smarter-Mainboard-Fan-Controller).
+- 🔄 First boot: after you choose the model the printer restarts by itself (it used to stay on "falta printer.cfg").
 - 🌐 The printer is called **`tortilleryplus.local`** on the network: no need to look up its IP.
 - ⏱️ Accurate print time (Klipper Estimator).
 - 🛠️ **Your settings survive updates**: whatever you put in `config/ajustes/` overrides `printer.cfg`. How to do it:
@@ -392,6 +399,8 @@ assets/            README images
 - **[joakimtoe/KlipperLCD](https://github.com/joakimtoe/KlipperLCD)** (Apache-2.0) — the program that connects the
   screen to Klipper. The modified files are in `plr/KlipperLCD/` with their licence.
 - **JeroMod** and **Tortillery 2.0** (@UrtziDV) — ideas incorporated.
+- **[grumat/artillery-x4-pro_config](https://github.com/grumat/artillery-x4-pro_config)** — his inductive probe measurements and the mainboard fan.
+- **[Mustafa Yücel](https://yucellmustafa.com.tr/blog/swx4-tortillery)** — the method to install without an eMMC adapter.
 - [Klipper](https://github.com/Klipper3d/klipper), [Moonraker](https://github.com/Arksine/moonraker),
   [Mainsail](https://github.com/mainsail-crew/mainsail), Crowsnest, KAMP, Shake&Tune, Moonraker-Timelapse, Mobileraker and
   Armbian.

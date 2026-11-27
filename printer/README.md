@@ -140,11 +140,12 @@ Después, `PRUEBA_HOMING` y, si sale bien, `FIJAR_HOMING`.
 
 ```ini
 [probe]
-samples: 3                  # de serie 2 toques por punto
-samples_tolerance: 0.02     # de serie 0.03 mm
+samples: 5                  # Tortillery+ 3 toques por punto (se queda con la mediana)
+samples_tolerance: 0.02     # Tortillery+ 0.03 mm
 ```
 
-La malla tarda más.
+La malla tarda más. Desde la 1.1.5 la sonda ya baja a 3 mm/s y usa la mediana de 3 toques, como propone
+[grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/The-Inductive-Z%E2%80%90Probe): según sus medidas, varía menos de la mitad.
 
 ### Ventilador de capa
 
