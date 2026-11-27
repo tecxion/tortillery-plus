@@ -63,6 +63,9 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
   - Restaura las aceleraciones y el sensor de filamento.
 - **Watchdog**:
   - KlipperLCD avisa a systemd mientras refresca la pantalla; si se cuelga o se muere, se reinicia sola.
+  - **También al arrancar (1.1.5)**: antes el arranque contaba siempre como vivo. Si se colgaba ahí (pasaba en el
+    primer arranque tras instalar), la pantalla se quedaba sin datos hasta apagar y encender. Ahora la espera del
+    arranque también avisa y, si en 5 minutos no empieza, systemd la reinicia.
   - La placa se reinicia sola si el sistema se cuelga del todo (watchdog de hardware de systemd).
 - Logs en RAM (`armbian-ramlog`, ya activo en la imagen): menos desgaste de la eMMC.
 - **Copia automática de la config** cada vez que cambia `printer.cfg` (p. ej. tras `SAVE_CONFIG`). Se guarda en
@@ -153,6 +156,8 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
     guarda (`LUZ_LED`, `tortillery_vars.cfg`) y se mantiene al imprimir y al reiniciar; antes cada impresión la volvía
     a poner en blanco.
   - **Malla automática (1.1)**: eliges 5x5, 6x6, 7x7 o 9x9 puntos antes de medir.
+  - **Torsión del eje X (1.1.5)**: Z+ y Z- bajan siempre 0,05 mm. Antes usaban el último paso elegido en otra página
+    (hasta 0,005 mm) y parecía que la boquilla no se acercaba.
   - Calibración (input shaper, pressure advance, extrusor, torsión).
   - Vigilancia IA.
   - Utilidades en dos páginas.

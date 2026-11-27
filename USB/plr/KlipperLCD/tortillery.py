@@ -181,6 +181,14 @@ def neopixel_gcode(kind, value):
     return 'LUZ_LED MODO=1 R=%s G=%s B=%s' % (r, g, b)
 
 
+TWIST_STEP = 0.05   # mm por pulsación de Z+/Z- en la torsión del eje X
+
+
+def twist_text(point):
+    """Ayuda de la página twist (campo de 64 caracteres)."""
+    return 'Punto %d de 3: Z- baja %.2f mm. Para cuando roce el papel' % (point, TWIST_STEP)
+
+
 MESH_DONE = 'tortillery_mesh_ok'   # respuesta de Klipper al acabar la malla (main.auto_mesh la espera)
 PAGE_LEVELMENU, PAGE_ASISTENTE = 60, 90   # ids reales en el TFT (OK del aviso: page nextpages)
 
@@ -512,10 +520,18 @@ def sd_notify(msg, addr=None):
         return False
 
 
-def alive(now=None, tick=None, limit=60):
-    """Vivo si aún arranca o si el refresco dio una vuelta hace menos de `limit` s."""
+STARTED = time.time()
+
+
+def alive(now=None, tick=None, limit=60, start_limit=300):
+    """Vivo si el refresco (o la espera del arranque, que también da vueltas) pasó hace menos de `limit` s, o si
+    lleva menos de `start_limit` s arrancando sin ninguna vuelta. Antes el arranque contaba siempre como vivo: si se
+    colgaba ahí (primer arranque tras instalar), la pantalla se quedaba sin datos hasta apagar y encender."""
+    now = now or time.time()
     tick = LAST_TICK if tick is None else tick
-    return tick is None or (now or time.time()) - tick < limit
+    if tick is None:
+        return now - STARTED < start_limit
+    return now - tick < limit
 
 
 def watchdog_loop():

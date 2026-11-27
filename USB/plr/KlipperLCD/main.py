@@ -62,6 +62,7 @@ class KlipperLCD ():
         progress_bar = 1
         model_asked = False
         while not self.update_printer():
+            tp.LAST_TICK = time.time()   # esperar a Klipper (o al modelo) es normal; colgarse aquí no: el watchdog lo ve
             if getattr(self, 'rebooting', False):   # modelo elegido: no pisar el aviso de reinicio
                 time.sleep(1)
                 continue
@@ -414,8 +415,8 @@ class KlipperLCD ():
                 'manual_probe']['is_active']
         except Exception:
             active = False
-        self.lcd.write('twist.t1.txt="%s"' % ('Punto %d de 3: baja con Z- hasta que roce' % self.twist_point
-                                              if active else 'Terminado: pulsa Guardar'))
+        self.lcd.z_offset_unit = tp.TWIST_STEP
+        self.lcd.write('twist.t1.txt="%s"' % (tp.twist_text(self.twist_point) if active else 'Terminado: pulsa Guardar'))
 
     def calib(self, action, data):
         if action == 'shaper':
@@ -460,8 +461,11 @@ class KlipperLCD ():
             self.cal_result('rotation_distance: %.4f -> %.4f\\rGuardado. Se aplica en cada arranque.' % (float(cur), rd))
         elif action == 'twist_start':
             self.twist_point = 1
+            # paso fijo: Z+/Z- usaban el último elegido en otra página (hasta 0.005 mm) y, como TESTZ sube 0.5 mm y vuelve
+            # a bajar en cada pulsación, parecía que no se acercaba a la cama
+            self.lcd.z_offset_unit = tp.TWIST_STEP
             self.printer.sendGCode(('' if self.printer.ishomed() else 'G28\n') + 'AXIS_TWIST_COMPENSATION_CALIBRATE')
-            self.lcd.write('twist.t1.txt="Punto 1 de 3: baja con Z- hasta que roce"')
+            self.lcd.write('twist.t1.txt="%s"' % tp.twist_text(1))
         elif action == 'twist_accept':
             Thread(target=self.calib_twist_accept, daemon=True).start()
         elif action == 'twist_save':
