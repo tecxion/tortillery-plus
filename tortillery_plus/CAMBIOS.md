@@ -197,6 +197,16 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
 - **Extras opcionales** (`extras.sh`): Tailscale, OctoEverywhere, Moonraker-Timelapse, Shake&Tune y **Mobileraker**
   (avisos push en el móvil).
 
+## Próximos cambios
+- **BLTouch (u otra sonda) en lugar de la sonda de serie**: hoy no se puede hacer desde `ajustes/`, porque un archivo
+  incluido cambia opciones pero no borra secciones. Además, `[probe]` (la de serie, en PA8) y `[bltouch]` no pueden
+  estar a la vez. El plan:
+  - el usuario pone su `[bltouch]`, con los pines de su cableado, en `ajustes/bltouch.cfg`;
+  - `tortillery-model.sh` ve ese archivo y quita el `[probe]` de serie al generar `printer.cfg`, así que sobrevive a
+    las actualizaciones;
+  - `[homing_override]` lee el Z-offset de `bltouch` si existe, y si no, de `probe`;
+  - ejemplo comentado en `ejemplos/ajustes/` y explicación en la guía de [printer](../printer/README.md).
+
 ## Créditos
 - [CiareCw455/Tortillery](https://github.com/CiareCw455/Tortillery): Tortillery original, la idea y el `.HMI` de la pantalla.
 - [joakimtoe/KlipperLCD](https://github.com/joakimtoe/KlipperLCD) (Apache-2.0).

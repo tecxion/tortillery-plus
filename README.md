@@ -160,7 +160,8 @@ La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y 
 ## 🧰 Qué necesitas
 
 - Una **Artillery Sidewinder X4 Pro o X4 Plus**.
-- Un **lector de eMMC** (adaptador USB para el módulo eMMC de la placa) para grabar la imagen.
+- Un **lector de eMMC** (adaptador USB para el módulo eMMC de la placa) para grabar la imagen. Sin él hay un método
+  avanzado y con riesgos: [Instalar sin adaptador](Actualizar%20sin%20adaptador/README.md).
 - Un **pendrive FAT32**, solo para actualizar la pantalla y el firmware de la placa.
 - Opcional: una **webcam USB** (cualquiera UVC) para fotos, timelapse y la IA.
 - Opcional: una **clave de API** de IA (u Ollama en tu PC) y un **bot de Telegram** creado con
@@ -367,6 +368,7 @@ tortillery_plus/   configs de Klipper, instalador, scripts, IA, Telegram y servi
 plr/               recuperación tras corte de luz y KlipperLCD (pantalla)
 printer/           guía para personalizar printer.cfg, moonraker.conf, la IA y Telegram
 telegram/          guía de Telegram: crear el bot, token, ID y órdenes
+Actualizar sin adaptador/  instalar sin lector de eMMC (método avanzado, de Mustafa Yücel)
 ejemplos/          archivos de ejemplo comentados (ajustes, IA, Telegram, Moonraker, cámara, laminador)
 USB/               USB de actualización sin internet (última versión, firmada)
 Traducido/         este README y la guía de personalizar, en inglés

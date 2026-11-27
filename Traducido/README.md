@@ -171,7 +171,8 @@ The eMMC image and the screen firmware are too large for GitHub and are on Terab
 ## 🧰 What you need
 
 - An **Artillery Sidewinder X4 Pro or X4 Plus**.
-- An **eMMC reader** (USB adapter for the board's eMMC module) to flash the image.
+- An **eMMC reader** (USB adapter for the board's eMMC module) to flash the image. Without one there's an advanced,
+  risky method: [Installing without an adapter](Actualizar%20sin%20adaptador/README.md).
 - A **FAT32 USB stick**, only to update the screen and the board firmware.
 - Optional: a **USB webcam** (any UVC one) for photos, timelapse and the AI.
 - Optional: an AI **API key** (or Ollama on your PC) and a **Telegram bot** created with
@@ -377,6 +378,7 @@ tortillery_plus/   Klipper configs, installer, scripts, AI, Telegram and service
 plr/               power-loss recovery and KlipperLCD (screen)
 printer/           guide to customising printer.cfg, moonraker.conf, the AI and Telegram
 telegram/          Telegram guide (Spanish; English in Traducido/telegram)
+Actualizar sin adaptador/  installing without an eMMC reader (advanced method, by Mustafa Yücel)
 ejemplos/          commented example files, Spanish and English (settings, AI, Telegram, Moonraker, camera, slicer)
 USB/               offline update stick (latest version, signed)
 Traducido/         this README and the customising guide in English
