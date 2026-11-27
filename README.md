@@ -153,8 +153,8 @@ La imagen de la eMMC y el firmware de la pantalla pesan demasiado para GitHub y 
 
 > **[⬇️ Descargar Tortillery+ (Terabox)](https://1024terabox.com/s/1VxnkAWIMICElKzex2T21og)**
 
-**Versión actual: 1.1.4.** La imagen trae Klipper 0.14.0, Moonraker 0.11.0 y Mainsail 2.19.0. Descarga la carpeta
-`Tortillery+_1.1.4`: dentro está la imagen (`IMAGEN_EMMC`) y la carpeta `USB`. Lo nuevo de cada versión, en
+**Versión actual: 1.1.5 (beta).** La imagen trae Klipper 0.14.0, Moonraker 0.11.0 y Mainsail 2.19.0. Descarga la carpeta
+`Tortillery+_1.1.5`: dentro está la imagen (`IMAGEN_EMMC`) y la carpeta `USB`. Lo nuevo de cada versión, en
 [Novedades](tortillery_plus/CAMBIOS.md).
 
 ## 🧰 Qué necesitas
@@ -202,7 +202,7 @@ Tortillery original vale la misma carpeta, con los pasos de [la guía de instala
    Opcional: pon también `wifi.cfg` o `telegram.cfg` ([ejemplos](ejemplos/usb)).
 3. Con la impresora apagada, pon el pendrive y enciéndela. Graba sola la placa y la pantalla (solo si han cambiado) y
    la pantalla vuelve a arrancar. Tarda unos minutos: no la apagues.
-4. Instala configs, macros y pantalla. Por SSH (`ssh mks@tortilleryplus.local` o `ssh mks@<IP>`):
+4. Instala configs, macros y pantalla. Por SSH (`ssh mks@<IP>`; `tortilleryplus.local` solo si ya tenías la 1.1.5 o posterior):
 
    ```bash
    sudo bash ~/printer_data/gcodes/USB/tortillery_plus/install.sh PRO     # o PLUS
@@ -231,6 +231,8 @@ No hace falta para usar la impresora, pero sirve para ver logs, reiniciar servic
    ```bash
    ssh mks@<IP de la impresora>
    ```
+
+   El nombre `tortilleryplus.local` lo pone la 1.1.5: en una versión anterior, entra por la IP.
 
 3. Usuario `mks`, contraseña `makerbase`. La primera vez te pregunta si confías en la impresora: escribe `yes`.
 

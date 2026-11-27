@@ -164,8 +164,8 @@ The eMMC image and the screen firmware are too large for GitHub and are on Terab
 
 > **[⬇️ Download Tortillery+ (Terabox)](https://1024terabox.com/s/1VxnkAWIMICElKzex2T21og)**
 
-**Current version: 1.1.4.** The image ships Klipper 0.14.0, Moonraker 0.11.0 and Mainsail 2.19.0. Download the
-`Tortillery+_1.1.4` folder: inside are the image (`IMAGEN_EMMC`) and the `USB` folder. What's new in each version:
+**Current version: 1.1.5 (beta).** The image ships Klipper 0.14.0, Moonraker 0.11.0 and Mainsail 2.19.0. Download the
+`Tortillery+_1.1.5` folder: inside are the image (`IMAGEN_EMMC`) and the `USB` folder. What's new in each version:
 [Changes](../tortillery_plus/CAMBIOS.md).
 
 ## 🧰 What you need
@@ -213,7 +213,7 @@ original Tortillery the same folder works, with the steps in [the installation g
    Optional: add `wifi.cfg` or `telegram.cfg` too ([examples](../ejemplos/usb)).
 3. With the printer off, plug in the stick and switch it on. It flashes the board and the screen by itself (only if
    they changed) and the screen restarts. It takes a few minutes: don't switch it off.
-4. Install configs, macros and screen. Over SSH (`ssh mks@tortilleryplus.local` or `ssh mks@<IP>`):
+4. Install configs, macros and screen. Over SSH (`ssh mks@<IP>`; `tortilleryplus.local` only if you already had 1.1.5 or later):
 
    ```bash
    sudo bash ~/printer_data/gcodes/USB/tortillery_plus/install.sh PRO     # or PLUS
@@ -242,6 +242,8 @@ You don't need it to use the printer, but it's handy to read logs, restart servi
    ```bash
    ssh mks@<printer IP>
    ```
+
+   The `tortilleryplus.local` name comes with 1.1.5: on an older version, use the IP.
 
 3. User `mks`, password `makerbase`. The first time it asks whether you trust the printer: type `yes`.
 
