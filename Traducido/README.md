@@ -44,7 +44,7 @@ Full list of changes compared with the original Tortillery: **[CAMBIOS.md](../to
 ## 🆕 What's new in 1.1.5 (beta)
 
 **Screen and printing**
-- 🛑 **Emergency stop** on the printing screen: red button at the top left, with confirmation.
+- 🛑 **Emergency stop** on the printing screen: red button on the _Imprimiendo_ (printing) line, so it no longer covers the file name, with confirmation.
 - 🧵 **Out of filament**: the printer used to stop silently with the head over the part. Now it warns on the screen and
   on Telegram. _Accept_ moves the head to the left (the bed does not move, so no position is lost) and opens _Load
   filament_: Unload and Load 10, 50 or 100 mm, then _Resume_. Temperatures never drop on their own during that pause;
@@ -63,6 +63,13 @@ Full list of changes compared with the original Tortillery: **[CAMBIOS.md](../to
   measurements by [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/The-Inductive-Z%E2%80%90Probe).
 - 📐 **Auto bed levelling**: the screen waits until the mesh is finished and then shows the deviation (it used to go
   back to the menu halfway).
+- 📊 **Mesh with progress**: the screen shows "point 12 of 49" while probing, and at the end a notice with a green
+  check and the deviation. It is faster (the probe lifts 2 mm between touches and 5 mm between points) and it loads by
+  itself at startup, so Mainsail shows the height map right after it finishes.
+- 📏 **Z-offset you can see**: when you open it, the nozzle goes to the centre at 0.1 mm (a sheet of paper) and the
+  value changes on the screen with every press. Tip on the screen: remove the filament, clean the nozzle and use a
+  sheet of paper. When saved it is stored in the probe and survives a restart.
+- 🔧 **X axis twist**: Z+ and Z- move in 0.05 mm steps.
 - Input shaper measured from 5 to 135 Hz (it stopped at 70 Hz and the X4's X resonance is around 100 Hz).
 - Pressure advance per material: `PRINT_START MATERIAL=...` applies the one for PLA, PETG, ABS/ASA or TPU.
 - X/Y skew with `CALIBRAR_ESCUADRA`.
@@ -74,11 +81,16 @@ Full list of changes compared with the original Tortillery: **[CAMBIOS.md](../to
 - Also detects blobs on the nozzle and layer shifts, and looks at the part up close.
 - If the photo is dark, it turns on the head light to take it.
 - **ia** camera in Mainsail with the last photo it checked.
+- The provider `url` works empty, with just the domain or in full (it used to give 404). If the model is too slow,
+  `--test` says so clearly.
 
 **System**
 - 🌀 **Mainboard fan**: it used to spin only with a hot nozzle; now it cools the drivers whenever motors or heaters are
   on, and for 3 more minutes at 70 %. Idea by [grumat](https://github.com/grumat/artillery-x4-pro_config/wiki/Smarter-Mainboard-Fan-Controller).
-- 🔄 First boot: after you choose the model the printer restarts by itself (it used to stay on "falta printer.cfg").
+- 🔄 First boot: after you choose the model the printer restarts by itself (it used to stay on "falta printer.cfg"), and
+  the watchdog also watches the startup: if the screen gets no data, it restarts by itself without switching the
+  printer off.
+- 🖲️ An error while handling a button no longer leaves the screen unresponsive.
 - 🌐 The printer is called **`tortilleryplus.local`** on the network: no need to look up its IP.
 - ⏱️ Accurate print time (Klipper Estimator).
 - 🛠️ **Your settings survive updates**: whatever you put in `config/ajustes/` overrides `printer.cfg`. How to do it:
@@ -360,6 +372,38 @@ On the screen: _Settings › Information_. In Mainsail: _Machine › Update Mana
 | WiFi: wrong password                                        | Connect again from _Settings › WiFi_; other saved networks are kept.                                                                                                                                                                        |
 | The Mainsail update doesn't install                         | Only signed versions install, and never while printing. Check `journalctl -u tortillery-update`.                                                                                                                                            |
 
+## 🐞 Beta testers: how to report a bug
+
+To fix a bug I need to know what happened and the **logs** from that moment. The system and screen logs **are wiped
+when the printer is switched off**: collect them before switching off or restarting.
+
+### 1. Collect the logs (one command)
+
+Log in over SSH (`ssh mks@<printer IP>`, password `makerbase`) and paste this as is:
+
+```bash
+cd ~/printer_data/logs && tail -n 300 /tmp/KlipperLCD.log > pantalla.log; sudo journalctl -b --no-pager -n 500 > sistema.log; sudo journalctl -u tortillery-ai -b --no-pager -n 200 > ia.log; tar czf informe_$(date +%F_%H%M).tar.gz klippy.log moonraker.log pantalla.log sistema.log ia.log && ls -1 informe_*
+```
+
+It leaves an `informe_<date>.tar.gz` file in the logs folder with everything: Klipper (`klippy.log`), Mainsail and
+Telegram (`moonraker.log`), the screen (`pantalla.log`), boot and services (`sistema.log`) and the AI (`ia.log`).
+
+### 2. Download it
+
+In Mainsail › **Machine**, pick the **logs** folder in the file list, right-click `informe_<date>.tar.gz` and
+_Download_. No SSH? Download at least `klippy.log` and `moonraker.log` from that folder, and take a photo of the screen.
+
+### 3. Send it
+
+- **GitHub** (best): open a **[new issue](https://github.com/tecxion/tortillery-plus/issues/new)** with a short title,
+  your model and version (_Settings › About_ on the screen), what you did step by step, what you expected and what
+  happened. **Drag** the `.tar.gz` and the photos into the text box: GitHub attaches them.
+- **[Discord](https://discord.gg/QAbVYzxPKk)**: open a topic in the Tortillery+ forum with the same and drag the file in.
+
+> [!WARNING]
+> The logs don't contain your keys, but **never** attach `telegram.cfg`, `tortillery_ai.cfg`, `moonraker.secrets` or
+> the `backup/` copies: they hold the Telegram token and the AI API keys.
+
 ## 🆘 Help and contact
 
 Something not working, or got an idea? Open an **[issue on GitHub](https://github.com/tecxion/tortillery-plus/issues)**
@@ -367,7 +411,7 @@ Something not working, or got an idea? Open an **[issue on GitHub](https://githu
 
 - Model (X4 Pro or X4 Plus) and Tortillery+ version.
 - What you did, what you expected and what happened (a photo of the screen helps a lot).
-- The logs: `klippy.log` and `moonraker.log` (Mainsail › _Machine_) and, for the AI, `journalctl -u tortillery-ai -n 100`.
+- The logs: [how to collect and send them](#-beta-testers-how-to-report-a-bug).
 
 > [!WARNING]
 > Before pasting a log or a config file, **remove your keys**: the Telegram token and the AI API keys.

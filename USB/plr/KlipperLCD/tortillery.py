@@ -189,6 +189,27 @@ def twist_text(point):
     return 'Punto %d de 3: Z- baja %.2f mm. Para cuando roce el papel' % (point, TWIST_STEP)
 
 
+PAPER_Z = 0.1   # mm: la boquilla se queda a Z 0,1 (un folio de 80 g); cuando el folio roza, el Z-offset es exacto
+
+
+def z_park_gcode(homed, cx, cy):
+    """Al entrar en la pantalla del Z-offset: sin offset de G-code, boquilla en el centro a la altura del folio."""
+    return '\n'.join(([] if homed else ['G28']) +
+                     ['SET_GCODE_OFFSET Z=0', 'G90', 'G1 Z10 F600', 'G1 X%d Y%d F6000' % (cx, cy),
+                      'G1 Z%.2f F300' % PAPER_Z])
+
+
+def save_z_gcode(offset, probe_z, gcode_z=None):
+    """Guardar de la pantalla del Z-offset. Antes solo mandaba ACCEPT + SAVE_CONFIG: lo ajustado con Z+/Z- (offset de
+    G-code) no se guardaba en la sonda y se perdía al reiniciar. Solo se pasa a la sonda si la boquilla está a la altura
+    del folio: ajustado a otra altura (p. ej. desde Z 10), el offset no es la corrección y movería la sonda centímetros."""
+    if probe_z is not None:
+        return 'ACCEPT\nSAVE_CONFIG'
+    if abs(offset) > 0.0005 and gcode_z is not None and abs(gcode_z - PAPER_Z) < 0.05:
+        return 'Z_OFFSET_APPLY_PROBE\nSAVE_CONFIG'
+    return 'SAVE_CONFIG'
+
+
 MESH_DONE = 'tortillery_mesh_ok'   # respuesta de Klipper al acabar la malla (main.auto_mesh la espera)
 PAGE_LEVELMENU, PAGE_ASISTENTE = 60, 90   # ids reales en el TFT (OK del aviso: page nextpages)
 
@@ -199,6 +220,24 @@ def auto_mesh_gcode(points, homed):
     count = ' PROBE_COUNT=%d,%d' % (points, points) if points else ''
     return (['M140 S60', 'M104 S150'] + ([] if homed else ['G28']) +
             ['M190 S60', 'M109 S150', 'BED_MESH_CALIBRATE PROFILE="default"' + count, 'RESPOND MSG="%s"' % MESH_DONE])
+
+
+def mesh_progress(msgs, start):
+    """Puntos de la malla ya medidos: posiciones distintas de '// probe: at x,y ...' desde el primer punto de la malla
+    (start = mesh_min; el sondeo del homing, si lo hay, va antes y no cuenta)."""
+    pts, on = [], False
+    for m in msgs:
+        if 'probe: at ' not in m:
+            continue
+        try:
+            x, y = (float(v) for v in m.split('probe: at ', 1)[1].split()[0].split(','))
+        except ValueError:
+            continue
+        if not on and abs(x - start[0]) < 0.5 and abs(y - start[1]) < 0.5:
+            on = True
+        if on and (x, y) not in pts:
+            pts.append((x, y))
+    return len(pts)
 
 
 def mesh_summary(matrix):

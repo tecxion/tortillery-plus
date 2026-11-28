@@ -1,6 +1,6 @@
 # Instalar Tortillery+ (X4 Pro / X4 Plus)
 
-En la descarga (Google Drive, enlace en el README) hay:
+En la descarga (Terabox, enlace en el README) hay:
 - **`IMAGEN_EMMC/Tortillery+_<versión>.img`**: el sistema completo (Armbian, Klipper, Moonraker, Mainsail, KlipperLCD y
   Tortillery+ ya instalado). Se graba en la eMMC del ordenador de la placa, **no** en la MCU. El `.sha256` sirve para
   comprobar la descarga.

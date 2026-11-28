@@ -525,8 +525,8 @@ class LCD:
         if data.bed != self.printer.bed or data.bed_target != self.printer.bed_target:
             self.write("params.bedtemp.txt=\"%d / %d\"" % (data.bed, data.bed_target))
 
-        if data.z_offset:
-            self.write("params.z_offset.val=%d" % (int)(data.z_offset * 100))
+        if data.z_offset is not None:   # también 0: si no, se quedaba en pantalla el valor anterior
+            self.write("params.z_offset.val=%d" % round(data.z_offset * 100))
             #self.write("adjustzoffset.z_offset.val=%d" % (int)(data.z_pos * 100))
         if data.x_pos:
             self.write("params.x.val=%d" % (int)(data.x_pos * 100) )
@@ -626,8 +626,13 @@ class LCD:
                         # New command/message received from display
                         cmd = self.rx_buf[3]
                         data = self.rx_buf[-(len-1):] # Remove header and command
-                        # Handle incoming data
-                        self._handle_command(cmd, data)
+                        # Handle incoming data. Un fallo al atender un botón no puede matar este hilo: sin él la
+                        # pantalla deja de responder a todo hasta reiniciar KlipperLCD
+                        try:
+                            self._handle_command(cmd, data)
+                        except Exception:
+                            import traceback
+                            traceback.print_exc()
                         self.rx_buf.clear()
                         self.rx_data_cnt = 0
                         self.rx_state = RX_STATE_IDLE
@@ -696,6 +701,10 @@ class LCD:
                                            None))
         elif code == 0x94:
             self.callback(self.evt.AI_PAGE)
+        elif code == 0x96:   # entra en la pantalla del Z-offset: la boquilla a Z 0 en el centro
+            self.z_offset_unit = 0.05
+            self.write("adjustzoffset.zoffset_value.val=2")   # el selector de paso de la página marca 0,05
+            self.callback(self.evt.CALIB, ('z_park', None))
         elif code == 0x95:
             self.callback(self.evt.TELEGRAM_QR)
         elif code == 0xA0:   # sin filamento: Aceptar
@@ -751,10 +760,12 @@ class LCD:
             return
         self.write('klipper_err.t0.txt="%s"' % text)
 
-    def show_alert(self,message:str,nextpages=1):
+    def show_alert(self,message:str,nextpages=1,ok=False):
         self.write("page show_alert")
         self.write(f'nextpages={nextpages}')
         self.write(f't1.txt="{message}"')
+        if ok:   # aviso bueno (fin de la malla): check verde en vez del triángulo rojo de peligro
+            self.write('p0.pic=params.ic_ok.val')
 
 
     def _handle_command(self, cmd, dat):
@@ -1211,11 +1222,9 @@ class LCD:
                 #self.write("adjustzoffset.z_offset.val=%d" % (int)(self.printer.z_pos * 100))
                 self.callback(self.evt.PROBE, unit)
             else:
-                offset += unit
-                #self.write("params.z_offset.val=%d" % (int)(offset * 100))
-                self.write("adjustzoffset.z_offset.val=%d" % (int)(offset * 100))
-                self.callback(self.evt.Z_OFFSET, offset)
-                self.printer.z_offset = offset
+                # relativo (Z_ADJUST): antes sumaba al offset de hace hasta 2 s y la pantalla no cambiaba; el valor
+                # real lo escribe main.show_z_offset al acabar el movimiento
+                self.callback(self.evt.Z_OFFSET, unit)
         elif data[0] == 0x04:
             self.z_offset_unit = 0.005
             self.write("adjustzoffset.zoffset_value.val=1")

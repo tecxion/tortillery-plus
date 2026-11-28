@@ -156,6 +156,16 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
     guarda (`LUZ_LED`, `tortillery_vars.cfg`) y se mantiene al imprimir y al reiniciar; antes cada impresión la volvía
     a poner en blanco.
   - **Malla automática (1.1)**: eliges 5x5, 6x6, 7x7 o 9x9 puntos antes de medir.
+  - **Z-offset (1.1.5)**: al entrar, la boquilla va al centro a 0,1 mm (un folio de 80 g) y el valor cambia en la
+    pantalla con cada pulsación (antes se quedaba fijo). Z+/Z- mueven en relativo y SAVE_CONFIG guarda el ajuste en la
+    sonda (`Z_OFFSET_APPLY_PROBE`); antes se perdía al reiniciar. Consejo en la pantalla: quita el filamento y limpia la
+    punta.
+  - **Botones más robustos (1.1.5)**: un fallo al atender un botón ya no deja la pantalla sin responder.
+  - **Malla con progreso (1.1.5)**: la pantalla dice "punto 12 de 49" mientras mide. Más rápida: entre toques la
+    sonda sube 2 mm (antes 5) y entre puntos va a 5 mm (antes 10). Al arrancar Klipper se carga la malla `default`:
+    tras guardarla, Klipper se reiniciaba sin malla activa y Mainsail no la mostraba.
+  - **Aviso de fin de malla (1.1.5)**: con un check verde en vez del triángulo rojo de peligro.
+  - **Parada de emergencia (1.1.5)**: en la línea del título, ya no tapa el nombre del archivo.
   - **Torsión del eje X (1.1.5)**: Z+ y Z- bajan siempre 0,05 mm. Antes usaban el último paso elegido en otra página
     (hasta 0,005 mm) y parecía que la boquilla no se acercaba.
   - Calibración (input shaper, pressure advance, extrusor, torsión).
@@ -168,6 +178,10 @@ idea y el `.HMI` de la pantalla. Esta es la lista de todo lo que Tortillery+ cam
 - Versión de Tortillery+ en la página de información.
 
 ## Cámara, IA y avisos
+- **URL del proveedor de IA (1.1.5)**: vale también la dirección completa que dan sus webs (`.../v1/chat/completions`); antes se le añadía otra vez `/chat/completions` y la IA contestaba 404. Y solo el dominio (`https://integrate.api.nvidia.com`, sin `/v1`) también vale.
+- **IA lenta (1.1.5)**: si el modelo no contesta a tiempo, `tortillery-ai.py --test` lo dice en una frase en vez de un
+  error largo. Los modelos que razonan mucho (p. ej. `moonshotai/kimi-k3.1-pro`) tardan más de 90 s: usa uno con visión
+  como `nvidia/nemotron-3.5-super-vl-120b-a12b`.
 - **Cámara USB/USB-C automática** (cualquier webcam UVC) y `[webcam]` en Mainsail sin configurar nada.
 - **Vigilancia con IA**:
   - Detecta espagueti, pieza despegada, atasco, bola en la boquilla y capa desplazada.

@@ -378,14 +378,57 @@ class KlipperLCD ():
         text, self.pending_accel = tp.shaper_text(res)
         self.cal_result(text + '\\rGuardar reinicia Klipper.', 0x81)
 
+    def z_state(self):
+        """-> (offset de G-code en Z, Z de la calibración manual o None si no está activa, Z pedida por G-code)."""
+        try:
+            st = self.printer.getREST('/printer/objects/query?gcode_move=homing_origin,gcode_position&manual_probe'
+                                      )['result']['status']
+            mp, gm = st.get('manual_probe', {}), st['gcode_move']
+            return (gm['homing_origin'][2], mp.get('z_position') if mp.get('is_active') else None,
+                    gm['gcode_position'][2])
+        except Exception:
+            return 0.0, None, None
+
+    def show_z_offset(self):
+        """Pantalla del Z-offset: el valor real tras moverse (calibración manual activa: su Z; si no, el offset)."""
+        time.sleep(0.8)
+        offset, probe_z, _ = self.z_state()
+        val = round((probe_z if probe_z is not None else offset) * 100)
+        self.lcd.write('params.z_offset.val=%d' % val)
+        self.lcd.write('levelmenu_z.z_offset.val=%d' % val)
+        self.lcd.write('adjustzoffset.z_offset.val=%d' % val)
+
     def auto_mesh(self, points):
         """Nivelación automática: la pantalla de espera se queda hasta que Klipper acaba la malla (antes volvía al menú
         en cuanto veía mandado el SAVE_CONFIG) y luego un aviso con el desnivel; OK vuelve a Nivelación (o a la
         bienvenida del primer arranque)."""
         self.cal_busy('Nivelando la cama: espera a que termine...')
         since = time.time() - 1
+        start, total = (20.0, 20.0), points * points
+        try:
+            bm = self.printer.getREST('/printer/objects/query?configfile=settings')['result']['status'][
+                'configfile']['settings']['bed_mesh']
+            start = tuple(float(v) for v in str(bm['mesh_min']).strip('[]() ').split(','))
+            if not points:
+                c = [int(v) for v in str(bm['probe_count']).strip('[]() ').split(',')]
+                total = c[0] * c[-1]
+        except Exception:
+            pass
         self.printer.sendGCode('\n'.join(tp.auto_mesh_gcode(points, self.printer.ishomed())))
-        ok = self.wait_response(tp.MESH_DONE, since, 3600)
+        ok, end, shown = False, time.time() + 3600, -1
+        while time.time() < end:   # como wait_response, pero contando los puntos medidos
+            time.sleep(2)
+            msgs = self.responses(since)
+            if any(tp.MESH_DONE in m for m in msgs):
+                ok = True
+                break
+            if any(m.startswith('!!') for m in msgs):
+                break
+            done = tp.mesh_progress(msgs, start)
+            if done != shown and done:
+                shown = done
+                self.lcd.write('autohome.t1.txt="Nivelando la cama: punto %d de %s"'
+                               % (min(done, total) if total else done, total or '?'))
         back = tp.PAGE_ASISTENTE if os.path.exists(tp.SETUP_PENDING) else tp.PAGE_LEVELMENU
         if not ok:
             self.lcd.show_alert('La nivelacion no ha terminado. Mira la consola de Mainsail.', back)
@@ -397,7 +440,7 @@ class KlipperLCD ():
             matrix = None
         self.printer.sendGCode('SAVE_CONFIG')   # guarda la malla "default" (Klipper se reinicia)
         self.lcd.write("levelmenu_z.va1.val=1")
-        self.lcd.show_alert(tp.mesh_summary(matrix), back)
+        self.lcd.show_alert(tp.mesh_summary(matrix), back, ok=True)
 
     def calib_ext_push(self, temp):
         self.cal_busy('Calentando a %d C y empujando 100 mm...' % temp)
@@ -419,7 +462,12 @@ class KlipperLCD ():
         self.lcd.write('twist.t1.txt="%s"' % (tp.twist_text(self.twist_point) if active else 'Terminado: pulsa Guardar'))
 
     def calib(self, action, data):
-        if action == 'shaper':
+        if action == 'z_park':
+            if self.printer.getState() not in ('printing', 'paused'):
+                self.printer.sendGCode(tp.z_park_gcode(self.printer.ishomed(), self.printer.X_MAX_POS * 0.5,
+                                                       self.printer.Y_MAX_POS * 0.5))
+                Thread(target=self.show_z_offset, daemon=True).start()
+        elif action == 'shaper':
             Thread(target=self.calib_shaper, daemon=True).start()
         elif action == 'shaper_save':
             acc = getattr(self, 'pending_accel', None)
@@ -601,7 +649,8 @@ class KlipperLCD ():
             data.x_pos         = self.printer.current_position.x
             data.y_pos         = self.printer.current_position.y
             data.z_pos         = self.printer.current_position.z
-            data.z_offset      = self.printer.z_offset
+            offset, probe_z, _ = self.z_state()   # en la calibración manual, la Z que va bajando con Z+/Z-
+            data.z_offset      = probe_z if probe_z is not None else offset
             data.file_name     = self.printer.file_name
             data.max_velocity           = self.printer.max_velocity          
             data.max_accel              = self.printer.max_accel             
@@ -712,8 +761,9 @@ class KlipperLCD ():
             else:
                 self.lcd.show_alert('Low Temperature!',7)
                 print('Error: Low Temperature!')
-        elif evt == self.lcd.evt.Z_OFFSET:
-            self.printer.setZOffset(data)
+        elif evt == self.lcd.evt.Z_OFFSET:   # data = paso relativo en mm (+ sube, - baja)
+            self.printer.sendGCode('SET_GCODE_OFFSET Z_ADJUST=%.3f MOVE=1' % data)
+            Thread(target=self.show_z_offset, daemon=True).start()
         elif evt == self.lcd.evt.NOZZLE:
             self.printer.setExtTemp(data)
         elif evt == self.lcd.evt.BED:
@@ -804,8 +854,12 @@ class KlipperLCD ():
         elif evt == self.lcd.evt.FLOW:
             self.printer.set_flow(data)
         elif evt == self.lcd.evt.PROBE:
-            self.printer.probe_calibrate()              
-            self.wait_probe = True
+            if data is not None:   # Z+/Z- en la calibración con sonda: printer.probe_calibrate no existe y mataba el hilo
+                self.printer.Probe_Z_Test(abs(data), '+' if data > 0 else '-')
+                Thread(target=self.show_z_offset, daemon=True).start()
+            else:
+                self.printer.Probe_Calibrate()
+                self.wait_probe = True
         elif evt == self.lcd.evt.PROBE_COMPLETE:        
             self.wait_probe = False
             #self.printer.sendGCode('G1 F1000 Z15.0')   
@@ -876,7 +930,7 @@ class KlipperLCD ():
         elif evt == self.lcd.evt.Filament_Sensor_Enable:
             self.printer.sendGCode('SET_FILAMENT_SENSOR SENSOR=fila ENABLE=1')
         elif evt == self.lcd.evt.SAVE_CONFIG:
-            self.printer.SAVE_CONFIG()
+            self.printer.sendGCode(tp.save_z_gcode(*self.z_state()))
         elif evt == self.lcd.evt.RUNOUT_PARK:
             self.printer.sendGCode('_CAMBIO_FILAMENTO')
         elif evt == self.lcd.evt.EMERGENCY_STOP:

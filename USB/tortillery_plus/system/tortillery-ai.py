@@ -61,6 +61,16 @@ BED_PROMPT = ("Find the 3D printer's build plate (the flat bed the part is print
               'of the image width and height, or {"cama": null} if you cannot see it.')
 BED_MARGIN = 15   # % alrededor de la cama: en las X4 la cama se mueve adelante y atrás
 OPENAI_BASES = {'openai': 'https://api.openai.com/v1', 'nvidia': 'https://integrate.api.nvidia.com/v1'}
+
+
+def openai_base(s):
+    """URL base de una API compatible con OpenAI. Acepta también la dirección completa que dan las webs de los
+    proveedores (.../v1/chat/completions): antes se le añadía otra vez /chat/completions y contestaban 404."""
+    default = OPENAI_BASES.get(s.get('proveedor'), '')
+    base = re.sub(r'/(chat/completions|completions|models)$', '', (s.get('url') or default).strip().rstrip('/'))
+    if default and base == default.rsplit('/', 1)[0]:   # solo el dominio (sin /v1): también daba 404
+        return default
+    return base
 # Claude: modelos que admiten el reintento en el servidor si la petición se rechaza (fallbacks)
 CLAUDE_FALLBACK = ('claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5', 'claude-fable-5-2', 'claude-fable-5-1')
 
@@ -135,7 +145,7 @@ def ask(s, jpg, ctx='', prev=None, prompt=None):
         r = json.loads(http(s['url'].rstrip('/') + '/api/chat', body, timeout=300))
         return r['message']['content']
     # openai / nvidia / cualquier API compatible con OpenAI (LM Studio, etc.)
-    base = (s.get('url') or OPENAI_BASES.get(p, '')).rstrip('/')
+    base = openai_base(s)
     if p == 'nvidia' and '/' not in model:
         model = 'nvidia/' + model   # build.nvidia.com usa ids con dueño: nvidia/..., meta/..., qwen/...
     # 2000: los modelos que razonan (Nemotron super, o-series...) gastan tokens pensando antes de contestar
@@ -1106,7 +1116,7 @@ if __name__ == '__main__':
         except urllib.error.HTTPError as e:
             print('Error %s de %s:\n%s' % (e.code, e.url, e.read().decode('utf-8', 'replace')[:600]))
             if e.code == 404 and s['proveedor'] not in ('anthropic', 'google', 'ollama'):
-                base = (s.get('url') or OPENAI_BASES.get(s['proveedor'], '')).rstrip('/')
+                base = openai_base(s)
                 try:
                     ids = [m['id'] for m in json.loads(http(base + '/models', headers={
                         'Authorization': 'Bearer ' + s.get('api_key', '')}, timeout=30))['data']]
@@ -1115,6 +1125,9 @@ if __name__ == '__main__':
                 except (urllib.error.URLError, OSError, KeyError, ValueError):
                     pass
             sys.exit(1)
+        except (TimeoutError, OSError) as e:   # URLError y SSLError son OSError
+            sys.exit('La IA no ha contestado a tiempo (%s). Revisa la url o prueba un modelo con vision '
+                     'mas rapido.' % e)
         print(text)
         print('->', verdict(text))
         vista(jpg, verdict(text), boxes(text), PD + '/config/ia_prueba.jpg')   # con la pieza y el fallo marcados
